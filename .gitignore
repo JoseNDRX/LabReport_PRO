@@ -1,0 +1,4 @@
+*.docx
+temp_extract/
+.vscode/
+node_modules/

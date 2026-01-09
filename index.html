@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>LabReport Pro - Generador de Citología</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<script src="https://unpkg.com/docx@7.1.0/build/index.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+	<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+	<style>
+		body {
+			font-family: 'Outfit', sans-serif;
+			background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
+			min-height: 100vh;
+		}
+
+		.glass {
+			background: rgba(255, 255, 255, 0.7);
+			backdrop-filter: blur(10px);
+			border: 1px solid rgba(255, 255, 255, 0.3);
+			box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+		}
+
+		.form-section {
+			transition: all 0.3s ease;
+		}
+
+		.form-section:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.1);
+		}
+
+		.input-focus {
+			transition: all 0.2s ease;
+		}
+
+		.input-focus:focus {
+			outline: 2px solid #3b82f6;
+			outline-offset: -1px;
+			border-color: #3b82f6;
+			transform: scale(1.01);
+		}
+
+		.btn-premium {
+			background: linear-gradient(90deg, #2563eb 0%, #1d4ed8 100%);
+			transition: all 0.3s ease;
+		}
+
+		.btn-premium:hover {
+			background: linear-gradient(90deg, #1d4ed8 0%, #1e40af 100%);
+			transform: scale(1.05);
+			box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+		}
+
+		.micro-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+			gap: 1rem;
+		}
+
+		#loginScreen {
+			position: fixed;
+			inset: 0;
+			z-index: 100;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			background: linear-gradient(-45deg, #1e3a8a, #1e40af, #3b82f6, #93c5fd);
+			background-size: 400% 400%;
+			animation: gradientBG 15s ease infinite;
+		}
+
+		@keyframes gradientBG {
+			0% {
+				background-position: 0% 50%;
+			}
+
+			50% {
+				background-position: 100% 50%;
+			}
+
+			100% {
+				background-position: 0% 50%;
+			}
+		}
+
+		#appContent {
+			display: none;
+		}
+	</style>
+</head>
+
+<body class="text-gray-800">
+
+	<!-- Pantalla de Login -->
+	<div id="loginScreen">
+		<div class="glass p-4 md:p-10 m-4 md:m-0 rounded-3xl w-full max-w-md text-center">
+			<div
+				class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-bold text-3xl shadow-xl mx-auto mb-6">
+				L</div>
+			<h2 class="text-3xl font-bold text-white mb-2">Bienvenido</h2>
+			<p class="text-slate-600 mb-8">Inicia sesión en LabReport Pro</p>
+
+			<form id="loginForm" class="space-y-4">
+				<input type="text" id="username" placeholder="Usuario"
+					class="w-full p-4 bg-white/20 border border-white/30 rounded-xl text-white placeholder-blue-200 outline-none focus:bg-white/30 transition-all">
+				<input type="password" id="password" placeholder="Contraseña"
+					class="w-full p-4 bg-white/20 border border-white/30 rounded-xl text-white placeholder-blue-200 outline-none focus:bg-white/30 transition-all">
+				<button type="submit"
+					class="w-full py-4 bg-white text-blue-700 font-bold rounded-xl hover:bg-blue-50 transition-all transform hover:scale-[1.02] active:scale-[0.98]">Acceder
+					al Sistema</button>
+			</form>
+			<p id="loginError" class="text-red-300 mt-4 hidden">Credenciales incorrectas. Inténtalo de nuevo.</p>
+		</div>
+	</div>
+
+	<!-- Contenido Principal -->
+	<div id="appContent">
+		<nav class="glass sticky top-0 z-50 p-4 border-b border-white/50">
+			<div class="container mx-auto flex justify-between items-center">
+				<div class="flex items-center space-x-2">
+					<div
+						class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-lg">
+						L</div>
+					<h1
+						class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-800">
+						LabReport Pro</h1>
+				</div>
+				<div class="flex items-center space-x-4">
+					<!-- <span
+						class="text-xs font-semibold bg-blue-100 text-blue-700 px-3 py-1 rounded-full border border-blue-200">V2.3
+						- FORMATO FINAL</span> -->
+					<button id="btnLogout"
+						class="text-gray-500 hover:text-red-600 font-medium text-sm transition-colors">Cerrar
+						Sesión</button>
+				</div>
+			</div>
+		</nav>
+
+		<main class="container mx-auto py-12 px-4 max-w-5xl">
+			<div class="mb-12 text-center">
+				<h2 class="text-4xl font-bold text-gray-900 mb-4">Emisión de Reportes</h2>
+				<p class="text-gray-600 max-w-xl mx-auto">Configuración de estudio bajo formato estandarizado de
+					LabReport Pro.
+				</p>
+			</div>
+
+			<div class="space-y-8">
+				<!-- 1. Selección de Plantilla -->
+				<div class="form-section glass p-8 rounded-2xl">
+					<label class="block text-sm font-bold text-blue-900 uppercase tracking-wider mb-3">1. Tipo de
+						Diagnóstico</label>
+					<select id="templateSelect"
+						class="w-full p-3 md:p-4 bg-white/50 border border-gray-200 rounded-xl font-semibold text-gray-700 input-focus cursor-pointer text-sm md:text-base">
+						<optgroup label="Flora Normal / Bacilar">
+							<option value="bacilar_con_zt">Flora Bacilar - Con Zona de Transformación</option>
+							<option value="bacilar_sin_zt">Flora Bacilar - Sin Zona de Transformación</option>
+							<option value="mixta">Flora Mixta</option>
+						</optgroup>
+						<optgroup label="Hallazgos Inflamatorios / Infecciosos">
+							<option value="candida_con_zt">Cándida SP - Con Zona de Transformación</option>
+							<option value="vaginosis_con_zt">Vaginosis Bacteriana - Con ZT</option>
+							<option value="vaginosis_sin_zt">Vaginosis Bacteriana - Sin ZT</option>
+							<option value="cocoide_sin_atrofia">Flora Cocoide - Sin Atrofia</option>
+							<option value="cocoide_atrofia">Flora Cocoide - Con Atrofia</option>
+						</optgroup>
+						<optgroup label="Anormalidades Epiteliales">
+							<option value="lesion_bajo_grado">Lesión de Bajo Grado (VPH/NIC1)</option>
+							<option value="lesion_alto_grado">Lesión de Alto Grado (NIC2/NIC3)</option>
+							<option value="asccus">Atipias Indeterminadas (ASC-US)</option>
+						</optgroup>
+					</select>
+				</div>
+
+				<!-- 2. Datos Administrativos -->
+				<div class="form-section glass p-8 rounded-2xl">
+					<h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center">
+						<span
+							class="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-3 text-sm">2</span>
+						Datos Generales
+					</h3>
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+						<div class="md:col-span-2">
+							<label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Paciente</label>
+							<input type="text" id="paciente"
+								class="w-full p-3 bg-white border border-gray-200 rounded-xl input-focus"
+								placeholder="Nombre completo">
+						</div>
+						<div>
+							<label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Edad</label>
+							<input type="text" id="edad"
+								class="w-full p-3 bg-white border border-gray-200 rounded-xl input-focus"
+								placeholder="Ej: 21 años">
+						</div>
+						<div>
+							<label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Número de
+								Estudio</label>
+							<input type="text" id="estudio"
+								class="w-full p-3 bg-white border border-gray-200 rounded-xl input-focus" value="C26-">
+						</div>
+						<div>
+							<label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Médico
+								Tratante</label>
+							<input type="text" id="medico"
+								class="w-full p-3 bg-white border border-gray-200 rounded-xl input-focus" value="Dr. ">
+						</div>
+						<div>
+							<label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Fecha</label>
+							<input type="date" id="fecha"
+								class="w-full p-3 bg-white border border-gray-200 rounded-xl input-focus">
+						</div>
+					</div>
+				</div>
+
+				<!-- 3. Hallazgos Microscópicos -->
+				<div class="form-section glass p-8 rounded-2xl">
+					<h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center">
+						<span
+							class="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-3 text-sm">3</span>
+						Hallazgos en la Muestra
+					</h3>
+					<div class="micro-grid">
+						<div>
+							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Calidad de la
+								muestra</label>
+							<input type="text" id="h_calidad"
+								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus"
+								value="Adecuada">
+						</div>
+						<div>
+							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Células
+								endocervicales</label>
+							<input type="text" id="h_endocervicales"
+								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus"
+								value="Presentes">
+						</div>
+						<div>
+							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Células de
+								metaplasia</label>
+							<input type="text" id="h_metaplasia"
+								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus"
+								value="--------">
+						</div>
+						<div>
+							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Células
+								endometriales</label>
+							<input type="text" id="h_endometriales"
+								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus"
+								value="--------">
+						</div>
+						<div>
+							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Reacción
+								inflamatoria</label>
+							<div class="flex gap-2">
+								<input type="text" id="h_inflamatoria"
+									class="flex-grow p-2 text-sm border border-gray-200 rounded-lg input-focus w-3/4"
+									value="Moderada">
+								<select id="h_inflamatoria_lv"
+									class="p-1 text-xs border border-gray-200 rounded-lg input-focus w-15">
+									<option value="1">+</option>
+									<option value="2" selected>++</option>
+									<option value="3">+++</option>
+								</select>
+							</div>
+						</div>
+						<div>
+							<label
+								class="block text-xs font-bold text-gray-500 uppercase mb-1">Polimorfonucleares</label>
+							<div class="flex gap-2">
+								<input type="text" id="h_pmn"
+									class="flex-grow p-2 text-sm border border-gray-200 rounded-lg input-focus w-3/4"
+									value="Presentes">
+								<select id="h_pmn_lv"
+									class="p-1 text-xs border border-gray-200 rounded-lg input-focus w-15">
+									<option value="1">+</option>
+									<option value="2" selected>++</option>
+									<option value="3">+++</option>
+								</select>
+							</div>
+						</div>
+						<div>
+							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Linfocitos</label>
+							<input type="text" id="h_linfocitos"
+								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus"
+								value="--------">
+						</div>
+						<div>
+							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Histiocitos</label>
+							<input type="text" id="h_histiocitos"
+								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus"
+								value="--------">
+						</div>
+						<div>
+							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Hematíes</label>
+							<input type="text" id="h_hematies"
+								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus"
+								value="--------">
+						</div>
+						<div>
+							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Bacterias</label>
+							<div class="flex gap-2">
+								<input type="text" id="h_bacterias"
+									class="flex-grow p-2 text-sm border border-gray-200 rounded-lg input-focus w-3/4"
+									value="Flora bacilar">
+								<select id="h_bacterias_lv"
+									class="p-1 text-xs border border-gray-200 rounded-lg input-focus w-15">
+									<option value="1">+</option>
+									<option value="2" selected>++</option>
+									<option value="3">+++</option>
+								</select>
+							</div>
+						</div>
+						<div>
+							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Candida sp</label>
+							<input type="text" id="h_candida"
+								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus"
+								value="--------">
+						</div>
+						<div>
+							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Gardnerella sp</label>
+							<input type="text" id="h_gardnerella"
+								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus"
+								value="--------">
+						</div>
+						<div>
+							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Actinomyces sp</label>
+							<input type="text" id="h_actinomyces"
+								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus"
+								value="--------">
+						</div>
+						<div>
+							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tricomonas
+								vaginalis</label>
+							<input type="text" id="h_tricomonas"
+								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus"
+								value="--------">
+						</div>
+						<div>
+							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Virus del herpes</label>
+							<input type="text" id="h_herpes"
+								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus"
+								value="--------">
+						</div>
+						<div>
+							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Cambios
+								epiteliales</label>
+							<input type="text" id="h_epiteliales"
+								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus"
+								value="Cambios reactivos">
+						</div>
+					</div>
+				</div>
+
+				<!-- 4. Resumen Bethesda -->
+				<div class="form-section glass p-8 rounded-2xl">
+					<h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center">
+						<span
+							class="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-3 text-sm">4</span>
+						Diagnóstico Final (Bethesda)
+					</h3>
+					<div class="space-y-6">
+						<div>
+							<label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Calidad de la
+								Muestra (Texto Largo)</label>
+							<textarea id="calidad_txt" rows="2"
+								class="w-full p-2 md:p-3 bg-white border border-gray-200 rounded-xl input-focus italic text-sm md:text-base"></textarea>
+						</div>
+						<div>
+							<label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Categorización
+								General</label>
+							<input type="text" id="categorizacion"
+								class="w-full p-3 bg-white border border-gray-200 rounded-xl input-focus font-bold"
+								value="NEGATIVO A LESIÓN INTRAEPITELIAL Y/O MALIGNIDAD">
+						</div>
+						<div>
+							<label
+								class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Interpretación</label>
+							<textarea id="interpretacion" rows="3"
+								class="w-full p-2 md:p-3 bg-white border border-gray-200 rounded-xl input-focus font-semibold text-blue-900 text-sm md:text-base"></textarea>
+						</div>
+						<div>
+							<label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Observaciones
+								Finales</label>
+							<textarea id="observaciones" rows="2"
+								class="w-full p-2 md:p-3 bg-white border border-gray-200 rounded-xl input-focus text-sm md:text-base"></textarea>
+						</div>
+					</div>
+				</div>
+
+				<!-- Botón de Acción -->
+				<div class="pt-6 flex flex-col items-center">
+					<button id="btnDownload"
+						class="btn-premium text-white font-bold py-5 px-12 rounded-2xl shadow-2xl flex items-center space-x-3 text-lg group">
+						<svg class="w-6 h-6 group-hover:animate-bounce" fill="none" stroke="currentColor"
+							viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+								d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+							</path>
+						</svg>
+						<span>Finalizar y Descargar .DOCX</span>
+					</button>
+				</div>
+			</div>
+		</main>
+
+		<footer class="text-center py-8 text-gray-400 text-sm">
+			&copy; 2026 LabReport Pro - Estandarización Citopatológica
+		</footer>
+	</div>
+
+	<script>
+		// Lógica de Login
+		document.getElementById('loginForm').addEventListener('submit', (e) => {
+			e.preventDefault();
+			const user = document.getElementById('username').value;
+			const pass = document.getElementById('password').value;
+			const error = document.getElementById('loginError');
+
+			if (user === 'gaby' && pass === '123456') {
+				document.getElementById('loginScreen').style.display = 'none';
+				document.getElementById('appContent').style.display = 'block';
+				localStorage.setItem('labsys_logged', 'true');
+			} else {
+				error.classList.remove('hidden');
+			}
+		});
+
+		document.getElementById('btnLogout').addEventListener('click', () => {
+			localStorage.removeItem('labsys_logged');
+			location.reload();
+		});
+
+		if (localStorage.getItem('labsys_logged') === 'true') {
+			document.getElementById('loginScreen').style.display = 'none';
+			document.getElementById('appContent').style.display = 'block';
+		}
+
+		const templates = {
+			bacilar_con_zt: {
+				calidad: "ADECUADA CON COMPONENTES DE LA ZONA DE TRANSFORMACIÓN",
+				interpretacion: "NEGATIVO A LESIÓN INTRAEPITELIAL Y/O MALIGNIDAD\nFLORA BACILAR",
+				h_inflamatoria: "Moderada",
+				h_bacterias: "Bacilos de Doderlein",
+				h_epiteliales: "Reactivos inflamatorios en epitelio escamoso"
+			},
+			bacilar_sin_zt: {
+				calidad: "ADECUADA SIN COMPONENTES DE LA ZONA DE TRANSFORMACIÓN",
+				interpretacion: "NEGATIVO A LESIÓN INTRAEPITELIAL Y/O MALIGNIDAD\nFLORA BACILAR",
+				h_endocervicales: "Ausentes",
+				h_inflamatoria: "Leve"
+			},
+			mixta: {
+				calidad: "ADECUADA CON ELEMENTOS DE LA ZONA DE TRANSFORMACIÓN",
+				interpretacion: "NEGATIVO A LESIÓN INTRAEPITELIAL Y/O MALIGNIDAD\nFLORA MIXTA",
+				h_bacterias: "Cocos y Bacilos"
+			},
+			candida_con_zt: {
+				calidad: "ADECUADA CON PRESENCIA DEL COMPONENTE DE LA ZONA DE TRANSFORMACIÓN",
+				interpretacion: "NEGATIVO A LESIÓN INTRAEPITELIAL Y/O MALIGNIDAD\nORGANISMOS MICÓTICOS COMPATIBLES CON CANDIDA SP",
+				h_candida: "Presente",
+				h_inflamatoria: "Intensa"
+			},
+			vaginosis_con_zt: {
+				calidad: "ADECUADA CON COMPONENTES DE LA ZONA DE TRANSFORMACIÓN",
+				interpretacion: "NEGATIVO A LESIÓN INTRAEPITELIAL Y/O MALIGNIDAD\nVIRAJE DE LA FLORA COMPATIBLE CON VAGINOSIS BACTERIANA (GARDNERELLA VAGINALIS)",
+				h_gardnerella: "Presente",
+				h_bacterias: "Cocobacilos"
+			},
+			vaginosis_sin_zt: {
+				calidad: "ADECUADA SIN COMPONENTES DE LA ZONA DE TRANSFORMACIÓN",
+				interpretacion: "NEGATIVO A LESIÓN INTRAEPITELIAL Y/O MALIGNIDAD\nVIRAJE DE LA FLORA COMPATIBLE CON VAGINOSIS BACTERIANA (GARDNERELLA VAGINALIS)",
+				h_gardnerella: "Presente",
+				h_endocervicales: "Ausentes"
+			},
+			lesion_bajo_grado: {
+				calidad: "ADECUADA CON ELEMENTOS DE LA ZONA DE TRANSFORMACIÓN",
+				interpretacion: "ANORMALIDADES EN CÉLULAS EPITELIALES\nLESIÓN INTRAEPITELIAL ESCAMOSA DE BAJO GRADO (VPH/NIC 1)",
+				h_epiteliales: "Coilocitos presentes. Células con halo perinuclear y atipia nuclear."
+			},
+			lesion_alto_grado: {
+				calidad: "ADECUADA CON ELEMENTOS DE LA ZONA DE TRANSFORMACIÓN",
+				interpretacion: "ANORMALIDADES EN CÉLULAS EPITELIALES\nLESIÓN INTRAEPITELIAL ESCAMOSA DE ALTO GRADO (NIC 2 / NIC 3)",
+				h_epiteliales: "Células parabasales e intermedias con núcleo hipercromático y membrana irregular."
+			},
+			asccus: {
+				calidad: "ADECUADA CON PRESENCIA DE ELEMENTOS DE LA ZONA DE TRANSFORMACIÓN",
+				interpretacion: "ANORMALIDADES EN CÉLULAS EPITELIALES\nATIPIAS DE SIGNIFICADO INDETERMINADO (ASC-US)",
+				h_epiteliales: "Células escamosas con aumento nuclear sugestivo de lesión."
+			}
+		};
+
+		const templateSelect = document.getElementById('templateSelect');
+
+		function updateFields() {
+			const selected = templates[templateSelect.value];
+			if (selected) {
+				document.getElementById('calidad_txt').value = selected.calidad || "";
+				document.getElementById('interpretacion').value = selected.interpretacion || "";
+
+				document.getElementById('h_calidad').value = "Adecuada";
+				document.getElementById('h_endocervicales').value = "Presentes";
+				document.getElementById('h_metaplasia').value = "--------";
+				document.getElementById('h_endometriales').value = "--------";
+				document.getElementById('h_inflamatoria').value = "Moderada";
+				document.getElementById('h_inflamatoria_lv').value = "2";
+				document.getElementById('h_pmn').value = "Presentes";
+				document.getElementById('h_pmn_lv').value = "2";
+				document.getElementById('h_linfocitos').value = "--------";
+				document.getElementById('h_histiocitos').value = "--------";
+				document.getElementById('h_hematies').value = "--------";
+				document.getElementById('h_bacterias').value = "Flora bacilar";
+				document.getElementById('h_bacterias_lv').value = "2";
+				document.getElementById('h_candida').value = "--------";
+				document.getElementById('h_gardnerella').value = "--------";
+				document.getElementById('h_actinomyces').value = "--------";
+				document.getElementById('h_tricomonas').value = "--------";
+				document.getElementById('h_herpes').value = "--------";
+				document.getElementById('h_epiteliales').value = "Reactivos inflamatorios";
+
+				if (selected.h_inflamatoria) document.getElementById('h_inflamatoria').value = selected.h_inflamatoria;
+				if (selected.h_bacterias) document.getElementById('h_bacterias').value = selected.h_bacterias;
+				if (selected.h_epiteliales) document.getElementById('h_epiteliales').value = selected.h_epiteliales;
+				if (selected.h_endocervicales) document.getElementById('h_endocervicales').value = selected.h_endocervicales;
+				if (selected.h_candida) document.getElementById('h_candida').value = selected.h_candida;
+				if (selected.h_gardnerella) document.getElementById('h_gardnerella').value = selected.h_gardnerella;
+			}
+		}
+
+		templateSelect.addEventListener('change', updateFields);
+
+		window.addEventListener('load', () => {
+			updateFields();
+			document.getElementById('fecha').valueAsDate = new Date();
+			document.getElementById('btnDownload').addEventListener('click', descargarDOCX);
+		});
+
+		async function descargarDOCX() {
+			const { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle, Table, TableRow, TableCell, WidthType, VerticalAlign, ImageRun, HeightRule } = window.docx;
+
+			const d = {
+				paciente: document.getElementById('paciente').value.toUpperCase() || "PACIENTE SIN NOMBRE",
+				edad: document.getElementById('edad').value || "--",
+				medico: document.getElementById('medico').value || "Dr. ",
+				estudio: document.getElementById('estudio').value || "C26-000",
+				fecha: new Date(document.getElementById('fecha').value).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }),
+
+				h_calidad: document.getElementById('h_calidad').value,
+				h_endocervicales: document.getElementById('h_endocervicales').value,
+				h_metaplasia: document.getElementById('h_metaplasia').value,
+				h_endometriales: document.getElementById('h_endometriales').value,
+				h_inflamatoria: document.getElementById('h_inflamatoria').value,
+				h_inflamatoria_lv: document.getElementById('h_inflamatoria_lv').value,
+				h_pmn: document.getElementById('h_pmn').value,
+				h_pmn_lv: document.getElementById('h_pmn_lv').value,
+				h_linfocitos: document.getElementById('h_linfocitos').value,
+				h_histiocitos: document.getElementById('h_histiocitos').value,
+				h_hematies: document.getElementById('h_hematies').value,
+				h_bacterias: document.getElementById('h_bacterias').value,
+				h_bacterias_lv: document.getElementById('h_bacterias_lv').value,
+				h_candida: document.getElementById('h_candida').value,
+				h_gardnerella: document.getElementById('h_gardnerella').value,
+				h_actinomyces: document.getElementById('h_actinomyces').value,
+				h_tricomonas: document.getElementById('h_tricomonas').value,
+				h_herpes: document.getElementById('h_herpes').value,
+				h_epiteliales: document.getElementById('h_epiteliales').value,
+
+				calidad_txt: document.getElementById('calidad_txt').value,
+				categorizacion: document.getElementById('categorizacion').value,
+				interpretacion: document.getElementById('interpretacion').value,
+				observaciones: document.getElementById('observaciones').value
+			};
+
+			// Cargar imagen de firma
+			let firmaImg;
+			try {
+				const response = await fetch('firma.png');
+				firmaImg = await response.arrayBuffer();
+			} catch (e) {
+				console.error("No se pudo cargar firma.png");
+			}
+
+			const borderNone = { style: BorderStyle.NONE };
+			const borderThin = { style: BorderStyle.SINGLE, size: 2 };
+
+			const doc = new Document({
+				styles: {
+					default: {
+						document: {
+							run: {
+								font: "Arial Narrow",
+							},
+						},
+					},
+				},
+				sections: [{
+					properties: { margin: { top: 720, right: 900, bottom: 720, left: 600 } },
+					children: [
+						new Paragraph({
+							children: [new TextRun({ text: "ESTUDIO CITOLÓGICO CONVENCIONAL", bold: true, size: 22, font: "Arial Narrow" })],
+							alignment: AlignmentType.LEFT, spacing: { before: 720 }
+						}),
+						new Paragraph({
+							children: [new TextRun({ text: "TINCIÓN: Papanicolaou", size: 22, font: "Arial Narrow" })],
+							alignment: AlignmentType.LEFT,
+						}),
+
+						// DATOS ADMINISTRATIVOS COMO PÁRRAFOS INDEPENDIENTES
+						new Paragraph({ children: [new TextRun({ text: "PACIENTE: ", size: 22, font: "Arial Narrow" }), new TextRun({ text: d.paciente, size: 22, font: "Arial Narrow" })] }),
+						new Paragraph({ children: [new TextRun({ text: "EDAD: ", size: 22, font: "Arial Narrow" }), new TextRun({ text: d.edad, size: 22, font: "Arial Narrow" })] }),
+						new Paragraph({ children: [new TextRun({ text: "MÉDICO SOLICITANTE: ", size: 22, font: "Arial Narrow" }), new TextRun({ text: d.medico, size: 22, font: "Arial Narrow" })] }),
+						new Paragraph({ children: [new TextRun({ text: "FECHA: ", size: 22, font: "Arial Narrow" }), new TextRun({ text: d.fecha, size: 22, font: "Arial Narrow" })] }),
+
+						new Paragraph({ children: [new TextRun({ text: "NÚMERO DE ESTUDIO: ", size: 22, font: "Arial Narrow" }), new TextRun({ text: d.estudio, size: 22, font: "Arial Narrow" })], spacing: { after: 400 } }),
+
+						// RESULTADOS (TABLA MODULAR)
+						new Table({
+							width: { size: 100, type: WidthType.PERCENTAGE },
+							borders: {
+								top: borderNone,
+								bottom: borderNone,
+								left: borderNone,
+								right: borderNone,
+								insideHorizontal: borderNone,
+								insideVertical: borderNone,
+							},
+							rows: [
+								new TableRow({
+									children: [
+										new TableCell({
+											width: { size: 55, type: WidthType.PERCENTAGE },
+											verticalAlign: VerticalAlign.TOP,
+											children: [
+												new Paragraph({ children: [new TextRun({ text: "INTERPRETACIÓN", bold: true, size: 20, font: "Arial Narrow" })], spacing: { after: 100 } }),
+												new Table({
+													width: { size: 100, type: WidthType.PERCENTAGE },
+													rows: [
+														["Calidad de la muestra:", d.h_calidad],
+														["Células endocervicales:", d.h_endocervicales],
+														["Células de metaplasia:", d.h_metaplasia],
+														["Células endometriales:", d.h_endometriales],
+														["Reacción inflamatoria:", d.h_inflamatoria, d.h_inflamatoria_lv],
+														["Polimorfonucleares:", d.h_pmn, d.h_pmn_lv],
+														["Linfocitos:", d.h_linfocitos],
+														["Histiocitos:", d.h_histiocitos],
+														["Hematíes:", d.h_hematies],
+														["Bacterias:", d.h_bacterias, d.h_bacterias_lv],
+														["Candida sp:", d.h_candida],
+														["Gardnerella sp:", d.h_gardnerella],
+														["Actinomyces sp:", d.h_actinomyces],
+														["Tricomonas vaginalis:", d.h_tricomonas],
+														["Cambios por virus del herpes:", d.h_herpes],
+														["Cambios epiteliales:", d.h_epiteliales],
+													].map(row => {
+														const labelsWithPlus = ["Reacción inflamatoria:", "Polimorfonucleares:", "Bacterias:"];
+														const isPlusRow = labelsWithPlus.includes(row[0]);
+
+														const cells = [
+															new TableCell({
+																verticalAlign: VerticalAlign.TOP,
+																margins: { left: 100, bottom: 100 },
+																children: [new Paragraph({
+																	children: [new TextRun({ text: row[0], size: 20, font: "Arial Narrow", bold: true })]
+																})],
+																borders: borderThin
+															})
+														];
+
+														if (isPlusRow) {
+															// Row with 3 columns: Label, Value (Left), Dynamic + (Center)
+															// row[2] contains the level from our new selector (1, 2 or 3)
+															const level = parseInt(row[2]) || 0;
+															const plusText = level > 0 ? "+".repeat(Math.min(level, 3)) : "";
+
+															cells.push(new TableCell({
+																verticalAlign: VerticalAlign.CENTER,
+																margins: { left: 100, bottom: 100 },
+																children: [new Paragraph({
+																	children: [new TextRun({ text: row[1], size: 20, font: "Arial Narrow" })],
+																	alignment: AlignmentType.LEFT
+																})],
+																borders: borderThin
+															}));
+															cells.push(new TableCell({
+																verticalAlign: VerticalAlign.CENTER,
+																children: [new Paragraph({
+																	children: [new TextRun({ text: plusText, size: 20, font: "Arial Narrow" })],
+																	alignment: AlignmentType.CENTER
+																})],
+																borders: borderThin,
+																width: { size: 10, type: WidthType.PERCENTAGE }
+															}));
+														} else {
+															// Merged row: Label, Value (Left, spans 2 columns)
+															cells.push(new TableCell({
+																verticalAlign: VerticalAlign.CENTER,
+																columnSpan: 2,
+																margins: { left: 100, bottom: 100 },
+																children: [new Paragraph({
+																	children: [new TextRun({ text: row[1], size: 20, font: "Arial Narrow" })],
+																	alignment: AlignmentType.LEFT
+																})],
+																borders: borderThin
+															}));
+														}
+
+														return new TableRow({
+															height: { value: 300, rule: HeightRule.ATLEAST },
+															children: cells
+														});
+													})
+												})
+											],
+											borders: borderNone
+										}),
+										new TableCell({ children: [], borders: borderNone, width: { size: 2, type: WidthType.PERCENTAGE } }),
+										new TableCell({
+											width: { size: 43, type: WidthType.PERCENTAGE },
+											verticalAlign: VerticalAlign.TOP,
+											children: [
+												new Paragraph({ children: [new TextRun({ text: "RESULTADO DE LA CITOLOGÍA", bold: true, size: 20, font: "Arial Narrow" })], spacing: { after: 100 } }),
+												new Table({
+													width: { size: 100, type: WidthType.PERCENTAGE },
+													rows: [
+														new TableRow({
+															children: [
+																new TableCell({
+																	margins: { bottom: 200, left: 100, right: 100 },
+																	borders: borderThin,
+																	children: [
+																		new Paragraph({ children: [new TextRun({ text: "CALIDAD DE LA MUESTRA;", bold: true, size: 20, font: "Arial Narrow" })] }),
+																		new Paragraph({ children: [new TextRun({ text: d.calidad_txt, size: 20, font: "Arial Narrow" })], spacing: { after: 200 } }),
+																		new Paragraph({ children: [new TextRun({ text: "CATEGORIZACIÓN GENERAL:", bold: true, size: 20, font: "Arial Narrow" })] }),
+																		new Paragraph({
+																			children: [new TextRun({ text: "• " + d.categorizacion, size: 20, font: "Arial Narrow" })],
+																			spacing: { after: 200 },
+																			indent: { left: 400 }
+																		}),
+																		new Paragraph({ children: [new TextRun({ text: "INTERPRETACIÓN:", bold: true, size: 20, font: "Arial Narrow" })] }),
+																		new Paragraph({ children: [new TextRun({ text: d.interpretacion, bold: true, color: "000000", size: 20, font: "Arial Narrow" })], spacing: { after: 400 } }),
+																		new Paragraph({ children: [new TextRun({ text: "Sistema Bethesda 2014.", italics: true, size: 18, font: "Arial Narrow" })], spacing: { before: 2000 } })
+																	]
+																})
+															]
+														})
+													]
+												})
+											],
+											borders: borderNone
+										})
+									]
+								})
+							]
+						}),
+
+						// FIRMA CON IMAGEN
+						new Paragraph({ spacing: { before: 100 } }),
+						firmaImg ? new Paragraph({
+							children: [
+								new ImageRun({
+									data: firmaImg,
+									transformation: { width: 106, height: 63 },
+								}),
+							],
+							alignment: AlignmentType.LEFT,
+						}) : new Paragraph({ text: "\n\n", alignment: AlignmentType.LEFT }),
+						new Paragraph({
+							children: [new TextRun({ text: "ATENTAMENTE", bold: true, size: 20, font: "Arial Narrow" })],
+							alignment: AlignmentType.LEFT,
+						}),
+						new Paragraph({
+							children: [new TextRun({ text: "DRA. ALVA MARTÍNEZ ANGOA", bold: true, size: 20, font: "Arial Narrow" })],
+							alignment: AlignmentType.LEFT,
+						}),
+						new Paragraph({
+							children: [new TextRun({ text: "Cédula 5928701", size: 20, font: "Arial Narrow" })],
+							alignment: AlignmentType.LEFT,
+						}),
+						new Paragraph({
+							children: [new TextRun({ text: "Residencia en Anatomía Patológica. Hospital General de México. Universidad Nacional Autónoma de México.", size: 20, font: "Arial Narrow" })],
+							alignment: AlignmentType.LEFT,
+						}),
+						new Paragraph({
+							children: [new TextRun({ text: "Re-Certificada por el Consejo Mexicano de Médicos Anatomopatólogos. Número 1014", size: 20, font: "Arial Narrow" })],
+							alignment: AlignmentType.LEFT,
+						}),
+					]
+				}]
+			});
+
+			const blob = await Packer.toBlob(doc);
+			window.saveAs(blob, `Reporte_LabSys_${d.paciente.replace(/\s/g, '_')}.docx`);
+		}
+	</script>
+</body>
+
+</html>
