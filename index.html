@@ -96,23 +96,41 @@
 
 	<!-- Pantalla de Login -->
 	<div id="loginScreen">
-		<div class="glass p-4 md:p-10 m-4 md:m-0 rounded-3xl w-full max-w-md text-center">
+		<div
+			class="glass p-6 md:p-12 m-4 md:m-0 rounded-[2.5rem] w-full max-w-md text-center shadow-2xl border-white/40">
 			<div
-				class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-bold text-3xl shadow-xl mx-auto mb-6">
+				class="w-20 h-20 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl flex items-center justify-center text-white font-bold text-4xl shadow-2xl mx-auto mb-8 transform transition-transform hover:scale-110">
 				L</div>
-			<h2 class="text-3xl font-bold text-white mb-2">Bienvenido</h2>
-			<p class="text-slate-600 mb-8">Inicia sesión en LabReport Pro</p>
+			<h2 class="text-4xl font-bold text-white mb-3 tracking-tight">Bienvenido</h2>
+			<p class="text-slate-600 mb-10 font-medium">Inicia sesión en LabReport Pro</p>
 
-			<form id="loginForm" class="space-y-4">
-				<input type="text" id="username" placeholder="Usuario"
-					class="w-full p-4 bg-white/20 border border-white/30 rounded-xl text-white placeholder-blue-200 outline-none focus:bg-white/30 transition-all">
-				<input type="password" id="password" placeholder="Contraseña"
-					class="w-full p-4 bg-white/20 border border-white/30 rounded-xl text-white placeholder-blue-200 outline-none focus:bg-white/30 transition-all">
+			<form id="loginForm" class="space-y-5">
+				<div class="relative group">
+					<input type="text" id="username" placeholder="Usuario"
+						class="w-full p-4 bg-white/90 border-2 border-transparent rounded-2xl text-gray-900 placeholder-gray-500 outline-none focus:bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-400/20 transition-all text-lg font-medium shadow-sm">
+				</div>
+				<div class="relative group">
+					<input type="password" id="password" placeholder="Contraseña"
+						class="w-full p-4 bg-white/90 border-2 border-transparent rounded-2xl text-gray-900 placeholder-gray-500 outline-none focus:bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-400/20 transition-all text-lg font-medium shadow-sm pr-12">
+					<button type="button" id="togglePassword"
+						class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-blue-600 transition-colors p-1">
+						<svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+							viewBox="0 0 24 24" stroke="currentColor">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+								d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+								d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+						</svg>
+					</button>
+				</div>
 				<button type="submit"
-					class="w-full py-4 bg-white text-blue-700 font-bold rounded-xl hover:bg-blue-50 transition-all transform hover:scale-[1.02] active:scale-[0.98]">Acceder
-					al Sistema</button>
+					class="w-full py-4 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-xl hover:shadow-blue-500/40 text-lg">
+					Acceder al Sistema
+				</button>
 			</form>
-			<p id="loginError" class="text-red-300 mt-4 hidden">Credenciales incorrectas. Inténtalo de nuevo.</p>
+			<p id="loginError"
+				class="text-red-100 font-semibold mt-6 bg-red-500/20 py-2 rounded-lg hidden border border-red-500/30">
+				Credenciales incorrectas. Inténtalo de nuevo.</p>
 		</div>
 	</div>
 
@@ -185,14 +203,14 @@
 						<div class="md:col-span-2">
 							<label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Paciente</label>
 							<input type="text" id="paciente"
-								class="w-full p-3 bg-white border border-gray-200 rounded-xl input-focus"
-								placeholder="Nombre completo">
+								class="w-full p-3 bg-white border border-gray-200 rounded-xl input-focus uppercase"
+								placeholder="Nombre completo" oninput="this.value = this.value.toUpperCase()">
 						</div>
 						<div>
 							<label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Edad</label>
-							<input type="text" id="edad"
+							<input type="number" id="edad" min="0" max="120"
 								class="w-full p-3 bg-white border border-gray-200 rounded-xl input-focus"
-								placeholder="Ej: 21 años">
+								placeholder="Ej: 21">
 						</div>
 						<div>
 							<label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Número de
@@ -227,28 +245,34 @@
 								muestra</label>
 							<input type="text" id="h_calidad"
 								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus"
-								value="Adecuada">
+								value="Adecuada" readonly>
 						</div>
 						<div>
 							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Células
 								endocervicales</label>
-							<input type="text" id="h_endocervicales"
-								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus"
-								value="Presentes">
+							<select id="h_endocervicales"
+								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus cursor-pointer">
+								<option value="--------">--------</option>
+								<option value="Presentes">Presentes</option>
+							</select>
 						</div>
 						<div>
 							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Células de
 								metaplasia</label>
-							<input type="text" id="h_metaplasia"
-								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus"
-								value="--------">
+							<select id="h_metaplasia"
+								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus cursor-pointer">
+								<option value="--------">--------</option>
+								<option value="Presentes">Presentes</option>
+							</select>
 						</div>
 						<div>
 							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Células
 								endometriales</label>
-							<input type="text" id="h_endometriales"
-								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus"
-								value="--------">
+							<select id="h_endometriales"
+								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus cursor-pointer">
+								<option value="--------">--------</option>
+								<option value="Presentes">Presentes</option>
+							</select>
 						</div>
 						<div>
 							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Reacción
@@ -256,7 +280,7 @@
 							<div class="flex gap-2">
 								<input type="text" id="h_inflamatoria"
 									class="flex-grow p-2 text-sm border border-gray-200 rounded-lg input-focus w-3/4"
-									value="Moderada">
+									value="Moderada" readonly>
 								<select id="h_inflamatoria_lv"
 									class="p-1 text-xs border border-gray-200 rounded-lg input-focus w-15">
 									<option value="1">+</option>
@@ -282,66 +306,84 @@
 						</div>
 						<div>
 							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Linfocitos</label>
-							<input type="text" id="h_linfocitos"
-								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus"
-								value="--------">
+							<select id="h_linfocitos"
+								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus cursor-pointer">
+								<option value="--------">--------</option>
+								<option value="Presentes">Presentes</option>
+							</select>
 						</div>
 						<div>
 							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Histiocitos</label>
-							<input type="text" id="h_histiocitos"
-								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus"
-								value="--------">
+							<select id="h_histiocitos"
+								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus cursor-pointer">
+								<option value="--------">--------</option>
+								<option value="Presentes">Presentes</option>
+							</select>
 						</div>
 						<div>
 							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Hematíes</label>
-							<input type="text" id="h_hematies"
-								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus"
-								value="--------">
-						</div>
-						<div>
-							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Bacterias</label>
 							<div class="flex gap-2">
-								<input type="text" id="h_bacterias"
+								<input type="text" id="h_hematies"
 									class="flex-grow p-2 text-sm border border-gray-200 rounded-lg input-focus w-3/4"
-									value="Flora bacilar">
-								<select id="h_bacterias_lv"
+									value="--------">
+								<select id="h_hematies_lv"
 									class="p-1 text-xs border border-gray-200 rounded-lg input-focus w-15">
+									<option value="0"> </option>
 									<option value="1">+</option>
-									<option value="2" selected>++</option>
+									<option value="2">++</option>
 									<option value="3">+++</option>
 								</select>
 							</div>
 						</div>
 						<div>
+							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Bacterias</label>
+							<select id="h_bacterias"
+								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus cursor-pointer">
+								<option value="--------">--------</option>
+								<option value="Bacilar">Bacilar</option>
+								<option value="Cocobacilar">Cocobacilar</option>
+							</select>
+						</div>
+						<div>
 							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Candida sp</label>
-							<input type="text" id="h_candida"
-								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus"
-								value="--------">
+							<select id="h_candida"
+								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus cursor-pointer">
+								<option value="--------">--------</option>
+								<option value="Presentes">Presentes</option>
+							</select>
 						</div>
 						<div>
 							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Gardnerella sp</label>
-							<input type="text" id="h_gardnerella"
-								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus"
-								value="--------">
+							<select id="h_gardnerella"
+								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus cursor-pointer">
+								<option value="--------">--------</option>
+								<option value="Presentes">Presentes</option>
+							</select>
 						</div>
 						<div>
 							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Actinomyces sp</label>
-							<input type="text" id="h_actinomyces"
-								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus"
-								value="--------">
+							<select id="h_actinomyces"
+								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus cursor-pointer">
+								<option value="--------">--------</option>
+								<option value="Presentes">Presentes</option>
+							</select>
 						</div>
 						<div>
 							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tricomonas
 								vaginalis</label>
-							<input type="text" id="h_tricomonas"
-								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus"
-								value="--------">
+							<select id="h_tricomonas"
+								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus cursor-pointer">
+								<option value="--------">--------</option>
+								<option value="Presentes">Presentes</option>
+							</select>
 						</div>
 						<div>
 							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Virus del herpes</label>
-							<input type="text" id="h_herpes"
-								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus"
-								value="--------">
+							<select id="h_herpes"
+								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus cursor-pointer">
+								<option value="--------">--------</option>
+								<option value="Presentes">Presentes</option>
+							</select>
 						</div>
 						<div>
 							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Cambios
@@ -412,6 +454,28 @@
 
 	<script>
 		// Lógica de Login
+		const passwordInput = document.getElementById('password');
+		const togglePasswordBtn = document.getElementById('togglePassword');
+		const eyeIcon = document.getElementById('eyeIcon');
+
+		togglePasswordBtn.addEventListener('click', () => {
+			const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+			passwordInput.setAttribute('type', type);
+
+			// Cambiar icono
+			if (type === 'text') {
+				eyeIcon.innerHTML = `
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.05 10.05 0 011.66-3.825M10.125 5.175A10.05 10.05 0 0112 5c4.477 0 8.268 2.943 9.542 7a10.05 10.05 0 01-1.66 3.825m-3.414-3.414a3 3 0 11-4.242-4.242" />
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18" />
+				`;
+			} else {
+				eyeIcon.innerHTML = `
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+				`;
+			}
+		});
+
 		document.getElementById('loginForm').addEventListener('submit', (e) => {
 			e.preventDefault();
 			const user = document.getElementById('username').value;
@@ -442,19 +506,20 @@
 				calidad: "ADECUADA CON COMPONENTES DE LA ZONA DE TRANSFORMACIÓN",
 				interpretacion: "NEGATIVO A LESIÓN INTRAEPITELIAL Y/O MALIGNIDAD\nFLORA BACILAR",
 				h_inflamatoria: "Moderada",
-				h_bacterias: "Bacilos de Doderlein",
+				h_bacterias: "Bacilar",
 				h_epiteliales: "Reactivos inflamatorios en epitelio escamoso"
 			},
 			bacilar_sin_zt: {
 				calidad: "ADECUADA SIN COMPONENTES DE LA ZONA DE TRANSFORMACIÓN",
 				interpretacion: "NEGATIVO A LESIÓN INTRAEPITELIAL Y/O MALIGNIDAD\nFLORA BACILAR",
 				h_endocervicales: "Ausentes",
-				h_inflamatoria: "Leve"
+				h_inflamatoria: "Leve",
+				h_bacterias: "Bacilar"
 			},
 			mixta: {
 				calidad: "ADECUADA CON ELEMENTOS DE LA ZONA DE TRANSFORMACIÓN",
 				interpretacion: "NEGATIVO A LESIÓN INTRAEPITELIAL Y/O MALIGNIDAD\nFLORA MIXTA",
-				h_bacterias: "Cocos y Bacilos"
+				h_bacterias: "Cocobacilar"
 			},
 			candida_con_zt: {
 				calidad: "ADECUADA CON PRESENCIA DEL COMPONENTE DE LA ZONA DE TRANSFORMACIÓN",
@@ -500,7 +565,7 @@
 				document.getElementById('interpretacion').value = selected.interpretacion || "";
 
 				document.getElementById('h_calidad').value = "Adecuada";
-				document.getElementById('h_endocervicales').value = "Presentes";
+				document.getElementById('h_endocervicales').value = "--------";
 				document.getElementById('h_metaplasia').value = "--------";
 				document.getElementById('h_endometriales').value = "--------";
 				document.getElementById('h_inflamatoria').value = "Moderada";
@@ -510,8 +575,8 @@
 				document.getElementById('h_linfocitos').value = "--------";
 				document.getElementById('h_histiocitos').value = "--------";
 				document.getElementById('h_hematies').value = "--------";
-				document.getElementById('h_bacterias').value = "Flora bacilar";
-				document.getElementById('h_bacterias_lv').value = "2";
+				document.getElementById('h_hematies_lv').value = "0";
+				document.getElementById('h_bacterias').value = "Bacilar";
 				document.getElementById('h_candida').value = "--------";
 				document.getElementById('h_gardnerella').value = "--------";
 				document.getElementById('h_actinomyces').value = "--------";
@@ -541,7 +606,7 @@
 
 			const d = {
 				paciente: document.getElementById('paciente').value.toUpperCase() || "PACIENTE SIN NOMBRE",
-				edad: document.getElementById('edad').value || "--",
+				edad: document.getElementById('edad').value ? document.getElementById('edad').value + " años" : "--",
 				medico: document.getElementById('medico').value || "Dr. ",
 				estudio: document.getElementById('estudio').value || "C26-000",
 				fecha: new Date(document.getElementById('fecha').value).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }),
@@ -557,8 +622,8 @@
 				h_linfocitos: document.getElementById('h_linfocitos').value,
 				h_histiocitos: document.getElementById('h_histiocitos').value,
 				h_hematies: document.getElementById('h_hematies').value,
+				h_hematies_lv: document.getElementById('h_hematies_lv').value,
 				h_bacterias: document.getElementById('h_bacterias').value,
-				h_bacterias_lv: document.getElementById('h_bacterias_lv').value,
 				h_candida: document.getElementById('h_candida').value,
 				h_gardnerella: document.getElementById('h_gardnerella').value,
 				h_actinomyces: document.getElementById('h_actinomyces').value,
@@ -644,8 +709,8 @@
 														["Polimorfonucleares:", d.h_pmn, d.h_pmn_lv],
 														["Linfocitos:", d.h_linfocitos],
 														["Histiocitos:", d.h_histiocitos],
-														["Hematíes:", d.h_hematies],
-														["Bacterias:", d.h_bacterias, d.h_bacterias_lv],
+														["Hematíes:", d.h_hematies, d.h_hematies_lv],
+														["Bacterias:", d.h_bacterias],
 														["Candida sp:", d.h_candida],
 														["Gardnerella sp:", d.h_gardnerella],
 														["Actinomyces sp:", d.h_actinomyces],
@@ -653,7 +718,7 @@
 														["Cambios por virus del herpes:", d.h_herpes],
 														["Cambios epiteliales:", d.h_epiteliales],
 													].map(row => {
-														const labelsWithPlus = ["Reacción inflamatoria:", "Polimorfonucleares:", "Bacterias:"];
+														const labelsWithPlus = ["Reacción inflamatoria:", "Polimorfonucleares:", "Hematíes:"];
 														const isPlusRow = labelsWithPlus.includes(row[0]);
 
 														const cells = [
@@ -738,8 +803,10 @@
 																			indent: { left: 400 }
 																		}),
 																		new Paragraph({ children: [new TextRun({ text: "INTERPRETACIÓN:", bold: true, size: 20, font: "Arial Narrow" })] }),
-																		new Paragraph({ children: [new TextRun({ text: d.interpretacion, bold: true, color: "000000", size: 20, font: "Arial Narrow" })], spacing: { after: 400 } }),
-																		new Paragraph({ children: [new TextRun({ text: "Sistema Bethesda 2014.", italics: true, size: 18, font: "Arial Narrow" })], spacing: { before: 2000 } })
+																		new Paragraph({ children: [new TextRun({ text: d.interpretacion, bold: true, color: "000000", size: 20, font: "Arial Narrow" })], spacing: { after: 200 } }),
+																		// new Paragraph({ children: [new TextRun({ text: "OBSERVACIONES:", bold: true, size: 20, font: "Arial Narrow" })] }),
+																		new Paragraph({ children: [new TextRun({ text: d.observaciones, size: 20, font: "Arial Narrow" })], spacing: { after: 400 } }),
+																		new Paragraph({ children: [new TextRun({ text: "Sistema Bethesda 2014.", italics: true, size: 18, font: "Arial Narrow" })], spacing: { before: 1600 } })
 																	]
 																})
 															]
@@ -790,7 +857,7 @@
 			});
 
 			const blob = await Packer.toBlob(doc);
-			window.saveAs(blob, `Reporte_LabSys_${d.paciente.replace(/\s/g, '_')}.docx`);
+			window.saveAs(blob, `${d.estudio} ${d.paciente}.docx`);
 		}
 	</script>
 </body>
