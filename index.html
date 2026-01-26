@@ -4,90 +4,224 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>LabReport Pro - Generador de Citología</title>
+	<title>LabReport Pro | Medical Diagnostic Suite</title>
+	<meta name="description" content="Premium citopathology reporting interface with advanced diagnostic tools.">
 	<script src="https://cdn.tailwindcss.com"></script>
 	<script src="https://unpkg.com/docx@7.1.0/build/index.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-	<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+	<script src="https://unpkg.com/lucide@latest"></script>
+	<script src="https://unpkg.com/tesseract.js@v4.0.1/dist/tesseract.min.js"></script>
+	<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 	<style>
+		:root {
+			/* Dark Mode (Default) Constants */
+			--bg-main: #121212;
+			--surface: #1E1E1E;
+			--surface-hover: #262626;
+			--primary: #10B981;
+			--primary-glow: rgba(16, 185, 129, 0.2);
+			--text-main: #E5E7EB;
+			--text-title: #FFFFFF;
+			--text-muted: #9CA3AF;
+			--text-inverse: #121212;
+			--border: rgba(255, 255, 255, 0.1);
+			--input-bg: #262626;
+		}
+
+		body.light-mode {
+			/* Light Mode Overrides (High Contrast Clinical) */
+			--bg-main: #F1F5F9;
+			--surface: #FFFFFF;
+			--surface-hover: #E2E8F0;
+			--primary: #047857;
+			--text-main: #000000;
+			--text-title: #000000;
+			--text-muted: #334155;
+			--text-inverse: #FFFFFF;
+			--border: rgba(0, 0, 0, 0.2);
+			--input-bg: #FFFFFF;
+		}
+
 		body {
 			font-family: 'Outfit', sans-serif;
-			background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
+			background-color: var(--bg-main);
+			color: var(--text-main);
 			min-height: 100vh;
+			transition: background-color 0.3s ease, color 0.3s ease;
 		}
 
 		.glass {
-			background: rgba(255, 255, 255, 0.7);
-			backdrop-filter: blur(10px);
-			border: 1px solid rgba(255, 255, 255, 0.3);
-			box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+			background: var(--surface);
+			border: 1px solid var(--border);
+			box-shadow: 0 4px 25px rgba(0, 0, 0, 0.1);
 		}
 
 		.form-section {
-			transition: all 0.3s ease;
+			transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+			border: 1px solid var(--border);
 		}
 
 		.form-section:hover {
+			border-color: var(--primary);
+			box-shadow: 0 10px 30px var(--primary-glow);
 			transform: translateY(-2px);
-			box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.1);
 		}
 
 		.input-focus {
+			background-color: var(--input-bg);
+			border: 1px solid var(--border);
+			color: var(--text-main);
 			transition: all 0.2s ease;
 		}
 
 		.input-focus:focus {
-			outline: 2px solid #3b82f6;
-			outline-offset: -1px;
-			border-color: #3b82f6;
-			transform: scale(1.01);
+			outline: none;
+			border-color: var(--primary);
+			box-shadow: 0 0 0 4px var(--primary-glow);
 		}
 
 		.btn-premium {
-			background: linear-gradient(90deg, #2563eb 0%, #1d4ed8 100%);
+			background: var(--primary);
+			color: var(--text-inverse);
+			font-weight: 700;
 			transition: all 0.3s ease;
 		}
 
 		.btn-premium:hover {
-			background: linear-gradient(90deg, #1d4ed8 0%, #1e40af 100%);
-			transform: scale(1.05);
-			box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+			opacity: 0.9;
+			transform: scale(1.02);
+			box-shadow: 0 5px 20px var(--primary-glow);
 		}
 
-		.micro-grid {
-			display: grid;
-			grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-			gap: 1rem;
+		.active-emerald {
+			border-color: var(--primary) !important;
+			color: var(--primary) !important;
+			box-shadow: 0 0 10px var(--primary-glow);
+		}
+
+		.segmented-control {
+			display: flex;
+			background: var(--input-bg);
+			padding: 4px;
+			border-radius: 12px;
+			gap: 4px;
+			border: 1px solid var(--border);
+		}
+
+		.segment-btn {
+			flex: 1;
+			padding: 8px;
+			text-align: center;
+			border-radius: 8px;
+			cursor: pointer;
+			font-weight: 600;
+			font-size: 0.75rem;
+			transition: all 0.2s ease;
+			color: var(--text-muted);
+		}
+
+		.segment-btn:hover {
+			background: var(--surface-hover);
+			color: var(--text-main);
+		}
+
+		.segment-btn.active {
+			background: var(--primary);
+			color: var(--text-inverse);
+			box-shadow: 0 2px 8px var(--primary-glow);
+		}
+
+		.floating-label-group {
+			position: relative;
+			margin-top: 1rem;
+		}
+
+		.floating-label {
+			position: absolute;
+			left: 12px;
+			top: 50%;
+			transform: translateY(-50%);
+			background: transparent;
+			padding: 0 4px;
+			color: var(--text-muted);
+			font-size: 0.875rem;
+			pointer-events: none;
+			transition: all 0.2s ease;
+		}
+
+		input:focus~.floating-label,
+		input:not(:placeholder-shown)~.floating-label,
+		textarea:focus~.floating-label,
+		textarea:not(:placeholder-shown)~.floating-label {
+			top: -14px;
+			left: 10px;
+			font-size: 0.95rem;
+			font-weight: 800;
+			color: var(--primary) !important;
+			background: var(--surface);
+			z-index: 10;
+		}
+
+		body.light-mode input:focus~.floating-label,
+		body.light-mode input:not(:placeholder-shown)~.floating-label,
+		body.light-mode textarea:focus~.floating-label,
+		body.light-mode textarea:not(:placeholder-shown)~.floating-label {
+			color: #000000 !important;
 		}
 
 		#loginScreen {
 			position: fixed;
 			inset: 0;
-			z-index: 100;
+			z-index: 1000;
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			background: linear-gradient(-45deg, #1e3a8a, #1e40af, #3b82f6, #93c5fd);
-			background-size: 400% 400%;
-			animation: gradientBG 15s ease infinite;
-		}
-
-		@keyframes gradientBG {
-			0% {
-				background-position: 0% 50%;
-			}
-
-			50% {
-				background-position: 100% 50%;
-			}
-
-			100% {
-				background-position: 0% 50%;
-			}
+			background: #000000;
 		}
 
 		#appContent {
 			display: none;
+		}
+
+		.theme-toggle-btn {
+			width: 38px;
+			height: 38px;
+			background: var(--surface);
+			border: 1px solid var(--border);
+			border-radius: 10px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			color: var(--text-muted);
+			cursor: pointer;
+			transition: all 0.2s ease;
+		}
+
+		.theme-toggle-btn:hover {
+			color: var(--primary);
+			border-color: var(--primary);
+		}
+
+		/* Custom scrollbar */
+		::-webkit-scrollbar {
+			width: 8px;
+		}
+
+		::-webkit-scrollbar-track {
+			background: var(--bg-main);
+		}
+
+		::-webkit-scrollbar-thumb {
+			background: var(--border);
+			border-radius: 10px;
+		}
+
+		::-webkit-scrollbar-thumb:hover {
+			background: var(--primary);
 		}
 	</style>
 </head>
@@ -95,364 +229,608 @@
 <body class="text-gray-800">
 
 	<!-- Pantalla de Login -->
-	<div id="loginScreen">
-		<div
-			class="glass p-6 md:p-12 m-4 md:m-0 rounded-[2.5rem] w-full max-w-md text-center shadow-2xl border-white/40">
+	<div id="loginScreen" class="animate__animated animate__fadeIn">
+		<div class="glass p-8 md:p-12 m-4 md:m-0 rounded-[2rem] w-full max-w-md text-center shadow-2xl border-white/10">
 			<div
-				class="w-20 h-20 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl flex items-center justify-center text-white font-bold text-4xl shadow-2xl mx-auto mb-8 transform transition-transform hover:scale-110">
-				L</div>
-			<h2 class="text-4xl font-bold text-white mb-3 tracking-tight">Bienvenido</h2>
-			<p class="text-slate-600 mb-10 font-medium">Inicia sesión en LabReport Pro</p>
+				class="w-20 h-20 bg-emerald-500 rounded-2xl flex items-center justify-center text-gray-900 shadow-2xl mx-auto mb-8 transform transition-transform hover:rotate-12">
+				<i data-lucide="microscope" class="w-12 h-12"></i>
+			</div>
+			<h2 class="text-3xl font-bold mb-2 tracking-tight" style="color: var(--text-title)">LabReport Pro</h2>
+			<p class="mb-10 font-medium" style="color: var(--text-muted)">Medical Diagnostic Suite</p>
 
-			<form id="loginForm" class="space-y-5">
-				<div class="relative group">
-					<input type="text" id="username" placeholder="Usuario"
-						class="w-full p-4 bg-white/90 border-2 border-transparent rounded-2xl text-gray-900 placeholder-gray-500 outline-none focus:bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-400/20 transition-all text-lg font-medium shadow-sm">
+			<form id="loginForm" class="space-y-6">
+				<div class="floating-label-group">
+					<input type="text" id="username" placeholder=" "
+						class="w-full p-4 input-focus rounded-xl outline-none focus:border-emerald-500 transition-all text-lg">
+					<label class="floating-label">Usuario</label>
 				</div>
-				<div class="relative group">
-					<input type="password" id="password" placeholder="Contraseña"
-						class="w-full p-4 bg-white/90 border-2 border-transparent rounded-2xl text-gray-900 placeholder-gray-500 outline-none focus:bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-400/20 transition-all text-lg font-medium shadow-sm pr-12">
+				<div class="floating-label-group">
+					<input type="password" id="password" placeholder=" "
+						class="w-full p-4 input-focus rounded-xl outline-none focus:border-emerald-500 transition-all text-lg pr-12">
+					<label class="floating-label">Contraseña</label>
 					<button type="button" id="togglePassword"
-						class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-blue-600 transition-colors p-1">
-						<svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
-							viewBox="0 0 24 24" stroke="currentColor">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-								d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-								d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-						</svg>
+						class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-emerald-500 transition-colors p-1">
+						<i data-lucide="eye" id="eyeIcon" class="w-6 h-6"></i>
 					</button>
 				</div>
 				<button type="submit"
-					class="w-full py-4 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-xl hover:shadow-blue-500/40 text-lg">
+					class="w-full py-4 btn-premium rounded-xl transform active:scale-95 shadow-xl text-lg">
 					Acceder al Sistema
 				</button>
 			</form>
 			<p id="loginError"
-				class="text-red-100 font-semibold mt-6 bg-red-500/20 py-2 rounded-lg hidden border border-red-500/30">
-				Credenciales incorrectas. Inténtalo de nuevo.</p>
+				class="text-red-400 font-semibold mt-6 bg-red-500/10 py-2 rounded-lg hidden border border-red-500/20">
+				Credenciales incorrectas.</p>
 		</div>
 	</div>
 
 	<!-- Contenido Principal -->
 	<div id="appContent">
-		<nav class="glass sticky top-0 z-50 p-4 border-b border-white/50">
+		<nav class="glass sticky top-0 z-50 p-4 border-b border-white/5">
 			<div class="container mx-auto flex justify-between items-center">
-				<div class="flex items-center space-x-2">
+				<div class="flex items-center space-x-3">
 					<div
-						class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-lg">
-						L</div>
-					<h1
-						class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-800">
-						LabReport Pro</h1>
+						class="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center text-gray-900 shadow-lg">
+						<i data-lucide="microscope" class="w-6 h-6"></i>
+					</div>
+					<div>
+						<h1 class="text-xl font-bold leading-none" style="color: var(--text-title)">LabReport Pro</h1>
+						<span class="text-[10px] text-emerald-500 font-bold uppercase tracking-widest">Medical
+							Suite</span>
+					</div>
 				</div>
-				<div class="flex items-center space-x-4">
-					<!-- <span
-						class="text-xs font-semibold bg-blue-100 text-blue-700 px-3 py-1 rounded-full border border-blue-200">V2.3
-						- FORMATO FINAL</span> -->
+				<div class="flex items-center space-x-6">
+					<button id="themeToggle" class="theme-toggle-btn group">
+						<i data-lucide="moon" id="themeIcon"
+							class="w-5 h-5 group-hover:rotate-12 transition-transform"></i>
+					</button>
+					<button id="btnManageDoctors"
+						class="text-gray-400 hover:text-emerald-500 flex items-center space-x-2 transition-colors">
+						<i data-lucide="stethoscope" class="w-5 h-5"></i>
+						<span class="hidden md:inline text-sm font-medium">Médicos</span>
+					</button>
 					<button id="btnLogout"
-						class="text-gray-500 hover:text-red-600 font-medium text-sm transition-colors">Cerrar
-						Sesión</button>
+						class="text-gray-400 hover:text-red-500 flex items-center space-x-2 transition-colors">
+						<i data-lucide="log-out" class="w-5 h-5"></i>
+						<span class="hidden md:inline text-sm font-medium">Salir</span>
+					</button>
 				</div>
 			</div>
 		</nav>
 
 		<main class="container mx-auto py-12 px-4 max-w-5xl">
-			<div class="mb-12 text-center">
-				<h2 class="text-4xl font-bold text-gray-900 mb-4">Emisión de Reportes</h2>
-				<p class="text-gray-600 max-w-xl mx-auto">Configuración de estudio bajo formato estandarizado de
-					LabReport Pro.
-				</p>
+			<div class="mb-12 text-center animate__animated animate__fadeInDown">
+				<h2 class="text-4xl font-bold mb-4" style="color: var(--text-title)">Emisión de Reportes</h2>
+				<p class="max-w-xl mx-auto font-medium" style="color: var(--text-muted)">Configure el estudio
+					citopatológico bajo el formato
+					estandarizado de LabReport Pro.</p>
 			</div>
 
-			<div class="space-y-8">
-				<!-- 1. Selección de Plantilla -->
-				<div class="form-section glass p-8 rounded-2xl">
-					<label class="block text-sm font-bold text-blue-900 uppercase tracking-wider mb-3">1. Tipo de
-						Diagnóstico</label>
-					<select id="templateSelect"
-						class="w-full p-3 md:p-4 bg-white/50 border border-gray-200 rounded-xl font-semibold text-gray-700 input-focus cursor-pointer text-sm md:text-base">
-						<optgroup label="Flora Normal / Bacilar">
-							<option value="bacilar_con_zt">Flora Bacilar - Con Zona de Transformación</option>
-							<option value="bacilar_sin_zt">Flora Bacilar - Sin Zona de Transformación</option>
-							<option value="mixta">Flora Mixta</option>
-						</optgroup>
-						<optgroup label="Hallazgos Inflamatorios / Infecciosos">
-							<option value="candida_con_zt">Cándida SP - Con Zona de Transformación</option>
-							<option value="vaginosis_con_zt">Vaginosis Bacteriana - Con ZT</option>
-							<option value="vaginosis_sin_zt">Vaginosis Bacteriana - Sin ZT</option>
-							<option value="cocoide_sin_atrofia">Flora Cocoide - Sin Atrofia</option>
-							<option value="cocoide_atrofia">Flora Cocoide - Con Atrofia</option>
-						</optgroup>
-						<optgroup label="Anormalidades Epiteliales">
-							<option value="lesion_bajo_grado">Lesión de Bajo Grado (VPH/NIC1)</option>
-							<option value="lesion_alto_grado">Lesión de Alto Grado (NIC2/NIC3)</option>
-							<option value="asccus">Atipias Indeterminadas (ASC-US)</option>
-						</optgroup>
-					</select>
-				</div>
+			<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+				<!-- Lado Izquierdo: Selección y Datos Generales -->
+				<div class="lg:col-span-2 space-y-6">
+					<!-- 1. Selección de Plantilla -->
+					<div class="form-section glass p-6 rounded-2xl animate__animated animate__fadeIn">
+						<div class="space-y-6">
+							<div class="relative group">
+								<label
+									class="block text-[10px] font-bold text-emerald-500 uppercase tracking-widest mb-2 ml-1">Médico
+									Tratante</label>
+								<div class="relative">
+									<input type="text" id="medico" placeholder=" "
+										class="w-full p-4 input-focus rounded-xl font-semibold outline-none focus:border-emerald-500 transition-all"
+										value="Dr. ">
+									<i data-lucide="search"
+										class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5"></i>
+								</div>
+								<div id="doctorDropdown"
+									class="hidden absolute top-full left-0 right-0 bg-black/90 border border-white/10 rounded-xl mt-2 z-10 max-h-48 overflow-y-auto shadow-2xl backdrop-blur-md">
+									<!-- List of doctors will appear here -->
+								</div>
+							</div>
 
-				<!-- 2. Datos Administrativos -->
-				<div class="form-section glass p-8 rounded-2xl">
-					<h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center">
-						<span
-							class="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-3 text-sm">2</span>
-						Datos Generales
-					</h3>
-					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-						<div class="md:col-span-2">
-							<label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Paciente</label>
-							<input type="text" id="paciente"
-								class="w-full p-3 bg-white border border-gray-200 rounded-xl input-focus uppercase"
-								placeholder="Nombre completo" oninput="this.value = this.value.toUpperCase()">
+							<div class="relative">
+								<label
+									class="block text-[10px] font-bold text-emerald-500 uppercase tracking-widest mb-2 ml-1">Tipo
+									de Diagnóstico</label>
+								<select id="templateSelect"
+									class="w-full p-4 input-focus rounded-xl font-semibold outline-none focus:border-emerald-500 cursor-pointer transition-all">
+									<optgroup label="Flora Normal / Bacilar">
+										<option value="bacilar_con_zt">Flora Bacilar - Con Zona de Transformación
+										</option>
+										<option value="bacilar_sin_zt">Flora Bacilar - Sin Zona de Transformación
+										</option>
+										<option value="mixta">Flora Mixta</option>
+									</optgroup>
+									<optgroup label="Hallazgos Inflamatorios / Infecciosos">
+										<option value="candida_con_zt">Cándida SP - Con Zona de Transformación</option>
+										<option value="vaginosis_con_zt">Vaginosis Bacteriana - Con ZT</option>
+										<option value="vaginosis_sin_zt">Vaginosis Bacteriana - Sin ZT</option>
+										<option value="cocoide_sin_atrofia">Flora Cocoide - Sin Atrofia</option>
+										<option value="cocoide_atrofia">Flora Cocoide - Con Atrofia</option>
+									</optgroup>
+									<optgroup label="Anormalidades Epiteliales">
+										<option value="lesion_bajo_grado">Lesión de Bajo Grado (VPH/NIC1)</option>
+										<option value="lesion_alto_grado">Lesión de Alto Grado (NIC2/NIC3)</option>
+										<option value="asccus">Atipias Indeterminadas (ASC-US)</option>
+									</optgroup>
+								</select>
+							</div>
 						</div>
-						<div>
-							<label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Edad</label>
-							<input type="number" id="edad" min="0" max="120"
-								class="w-full p-3 bg-white border border-gray-200 rounded-xl input-focus"
-								placeholder="Ej: 21">
+					</div>
+
+					<!-- 2. Datos Administrativos -->
+					<div class="form-section glass p-6 rounded-2xl animate__animated animate__fadeIn"
+						style="animation-delay: 0.1s">
+						<div class="flex items-center space-x-3 mb-6">
+							<i data-lucide="user" class="text-emerald-500 w-5 h-5"></i>
+							<h3 class="text-md font-bold uppercase tracking-wider" style="color: var(--text-title)">2.
+								Datos Generales</h3>
 						</div>
-						<div>
-							<label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Número de
-								Estudio</label>
-							<input type="text" id="estudio"
-								class="w-full p-3 bg-white border border-gray-200 rounded-xl input-focus" value="C26-">
-						</div>
-						<div>
-							<label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Médico
-								Tratante</label>
-							<input type="text" id="medico"
-								class="w-full p-3 bg-white border border-gray-200 rounded-xl input-focus" value="Dr. ">
-						</div>
-						<div>
-							<label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Fecha</label>
-							<input type="date" id="fecha"
-								class="w-full p-3 bg-white border border-gray-200 rounded-xl input-focus">
+						<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+							<!-- Row 1: Estudio & Paciente -->
+							<div class="md:col-span-1 floating-label-group">
+								<input type="text" id="estudio" placeholder=" "
+									class="w-full p-2.5 input-focus rounded-xl outline-none focus:border-emerald-500 transition-all font-bold text-xl"
+									value="C26-">
+								<label class="floating-label">Número</label>
+							</div>
+							<div class="md:col-span-3 floating-label-group">
+								<input type="text" id="paciente" placeholder=" "
+									class="w-full p-2.5 input-focus rounded-xl outline-none focus:border-emerald-500 uppercase transition-all font-semibold text-xl"
+									oninput="this.value = this.value.toUpperCase()">
+								<label class="floating-label">Nombre de la Paciente</label>
+							</div>
+
+							<!-- Row 2: Edad & Fecha -->
+							<div class="md:col-span-1 floating-label-group">
+								<input type="number" id="edad" min="0" max="99" placeholder=" "
+									class="w-full p-2.5 input-focus rounded-xl outline-none focus:border-emerald-500 transition-all font-semibold text-xl"
+									oninput="if(this.value > 99) this.value = 99; if(this.value < 0) this.value = 0;">
+								<label class="floating-label">Edad</label>
+							</div>
+							<div class="md:col-span-3 floating-label-group">
+								<input type="date" id="fecha" placeholder=" "
+									class="w-full p-2.5 input-focus rounded-xl outline-none focus:border-emerald-500 transition-all font-semibold text-xl">
+								<label class="floating-label">Fecha del Reporte</label>
+							</div>
 						</div>
 					</div>
 				</div>
 
-				<!-- 3. Hallazgos Microscópicos -->
-				<div class="form-section glass p-8 rounded-2xl">
-					<h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center">
-						<span
-							class="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-3 text-sm">3</span>
-						Hallazgos en la Muestra
-					</h3>
-					<div class="micro-grid">
-						<div>
-							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Calidad de la
-								muestra</label>
-							<input type="text" id="h_calidad"
-								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus"
-								value="Adecuada" readonly>
+				<!-- Lado Derecho: Live Preview & OCR (Sticky) -->
+				<div class="space-y-8">
+					<!-- Configuración de Exportación -->
+					<div class="form-section glass p-6 rounded-2xl animate__animated animate__fadeIn">
+						<div class="flex items-center space-x-3 mb-6">
+							<i data-lucide="settings" class="text-emerald-500 w-5 h-5"></i>
+							<h3 class="text-xs font-bold uppercase tracking-widest" style="color: var(--text-title)">
+								Exportación</h3>
 						</div>
-						<div>
-							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Células
+						<div class="space-y-4">
+							<label class="flex items-center space-x-3 cursor-pointer group">
+								<input type="checkbox" id="exportDocx" checked
+									class="w-5 h-5 rounded border-gray-300 text-emerald-500 focus:ring-emerald-500 accent-emerald-500">
+								<span class="text-sm font-medium group-hover:text-emerald-500 transition-colors"
+									style="color: var(--text-main)">Generar .DOCX</span>
+							</label>
+							<label class="flex items-center space-x-3 cursor-pointer group">
+								<input type="checkbox" id="exportPdf"
+									class="w-5 h-5 rounded border-gray-300 text-emerald-500 focus:ring-emerald-500 accent-emerald-500">
+								<span class="text-sm font-medium group-hover:text-emerald-500 transition-colors"
+									style="color: var(--text-main)">Generar .PDF</span>
+							</label>
+							<div class="pt-2 border-t border-white/5">
+								<label class="flex items-center space-x-3 cursor-pointer group">
+									<input type="checkbox" id="includeWatermark"
+										class="w-5 h-5 rounded border-gray-300 text-emerald-500 focus:ring-emerald-500 accent-emerald-500">
+									<span class="text-sm font-bold group-hover:text-emerald-500 transition-colors"
+										style="color: var(--text-main)">Incluir Marca de Agua</span>
+								</label>
+							</div>
+						</div>
+					</div>
+
+					<!-- OCR Lite -->
+					<div class="form-section glass p-8 rounded-2xl animate__animated animate__fadeInRight hidden"
+						style="animation-delay: 0.1s">
+						<div class="flex items-center space-x-3 mb-6">
+							<i data-lucide="camera" class="text-emerald-500 w-6 h-6"></i>
+							<h3 class="text-sm font-bold uppercase tracking-widest" style="color: var(--text-title)">OCR
+								Lite (Borrador)</h3>
+						</div>
+						<div id="ocrDropzone"
+							class="border-2 border-dashed border-white/10 rounded-2xl p-6 text-center hover:border-emerald-500 transition-colors cursor-pointer group">
+							<i data-lucide="upload-cloud"
+								class="w-10 h-10 mx-auto mb-3 group-hover:text-emerald-500 transition-colors"
+								style="color: var(--text-muted)"></i>
+							<p class="text-sm font-medium tracking-tight" style="color: var(--text-main)">Seleccionar
+								archivo o arrastra una foto</p>
+							<p class="text-[10px] mt-1" style="color: var(--text-muted)">Soporta PNG, JPG, JPEG</p>
+							<input type="file" id="ocrInput" class="hidden" accept="image/*">
+						</div>
+						<div id="ocrStatus" class="mt-4 text-xs font-medium hidden" style="color: var(--primary)">
+							Procesando...</div>
+						<textarea id="ocrDraft" rows="4"
+							class="w-full mt-4 p-3 bg-black/5 input-focus rounded-xl text-xs outline-none focus:border-emerald-500 transition-all"
+							placeholder="El texto extraído aparecerá aquí..."></textarea>
+					</div>
+
+					<!-- Live Preview -->
+					<div class="form-section glass p-8 rounded-2xl sticky top-24 animate__animated animate__fadeInRight hidden"
+						style="animation-delay: 0.1s">
+						<div class="flex items-center space-x-3 mb-6">
+							<i data-lucide="eye" class="text-emerald-500 w-6 h-6"></i>
+							<h3 class="text-sm font-bold uppercase tracking-widest" style="color: var(--text-title)">
+								Live Preview</h3>
+						</div>
+						<div id="livePreview"
+							class="bg-white rounded-lg p-6 text-[10px] leading-tight text-gray-900 shadow-inner overflow-hidden"
+							style="min-height: 300px; font-family: 'Arial Narrow', sans-serif;">
+							<!-- Dynamic preview content -->
+							<div class="text-center font-bold border-b border-gray-200 pb-2 mb-4">CITOLOGÍA VAGINAL
+							</div>
+							<div id="previewHeader" class="space-y-1 mb-4"></div>
+							<div id="previewTable" class="grid grid-cols-2 gap-2 border-t border-gray-100 pt-4"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- 3. Hallazgos Microscópicos (Abajo de todo el ancho) -->
+			<div class="mt-8 space-y-8">
+				<div class="form-section glass p-8 rounded-2xl animate__animated animate__fadeInUp">
+					<div class="flex items-center space-x-3 mb-8">
+						<i data-lucide="microscope" class="text-emerald-500 w-6 h-6"></i>
+						<h3 class="text-lg font-bold uppercase tracking-wider" style="color: var(--text-title)">3.
+							Hallazgos en la Muestra
+						</h3>
+					</div>
+					<div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+						<div class="space-y-2">
+							<label class="block text-[10px] font-bold uppercase tracking-widest ml-1"
+								style="color: var(--text-muted)">Calidad
+								de la muestra</label>
+							<input type="text" id="h_calidad"
+								class="w-full p-2 bg-black/5 border border-white/5 rounded-lg text-sm outline-none"
+								style="color: var(--text-main)" value="Adecuada" readonly>
+						</div>
+						<div class="space-y-2">
+							<label
+								class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Células
 								endocervicales</label>
 							<select id="h_endocervicales"
-								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus cursor-pointer">
+								class="w-full p-2 bg-[#262626] border border-white/10 rounded-lg text-white text-sm outline-none focus:border-emerald-500 cursor-pointer">
 								<option value="--------">--------</option>
 								<option value="Presentes">Presentes</option>
 							</select>
 						</div>
-						<div>
-							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Células de
-								metaplasia</label>
+						<div class="space-y-2">
+							<label
+								class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Células
+								de metaplasia</label>
 							<select id="h_metaplasia"
-								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus cursor-pointer">
+								class="w-full p-2 bg-[#262626] border border-white/10 rounded-lg text-white text-sm outline-none focus:border-emerald-500 cursor-pointer">
 								<option value="--------">--------</option>
 								<option value="Presentes">Presentes</option>
 							</select>
 						</div>
-						<div>
-							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Células
+						<div class="space-y-2">
+							<label
+								class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Células
 								endometriales</label>
 							<select id="h_endometriales"
-								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus cursor-pointer">
+								class="w-full p-2 bg-[#262626] border border-white/10 rounded-lg text-white text-sm outline-none focus:border-emerald-500 cursor-pointer">
 								<option value="--------">--------</option>
 								<option value="Presentes">Presentes</option>
 							</select>
 						</div>
-						<div>
-							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Reacción
-								inflamatoria</label>
-							<div class="flex gap-2">
-								<input type="text" id="h_inflamatoria"
-									class="flex-grow p-2 text-sm border border-gray-200 rounded-lg input-focus w-3/4"
-									value="Moderada" readonly>
-								<select id="h_inflamatoria_lv"
-									class="p-1 text-xs border border-gray-200 rounded-lg input-focus w-15">
-									<option value="1">+</option>
-									<option value="2" selected>++</option>
-									<option value="3">+++</option>
-								</select>
-							</div>
-						</div>
-						<div>
+						<div class="space-y-2">
 							<label
-								class="block text-xs font-bold text-gray-500 uppercase mb-1">Polimorfonucleares</label>
-							<div class="flex gap-2">
+								class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Reacción
+								inflamatoria</label>
+							<div class="flex flex-col gap-2">
+								<input type="text" id="h_inflamatoria"
+									class="w-full p-2 bg-black/20 border border-white/5 rounded-lg text-white text-xs outline-none"
+									value="Moderada" readonly>
+								<div class="segmented-control" data-target="h_inflamatoria_lv">
+									<div class="segment-btn" data-value="1">+</div>
+									<div class="segment-btn active" data-value="2">++</div>
+									<div class="segment-btn" data-value="3">+++</div>
+									<input type="hidden" id="h_inflamatoria_lv" value="2">
+								</div>
+							</div>
+						</div>
+						<div class="space-y-2">
+							<label
+								class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Polimorfonucleares</label>
+							<div class="flex flex-col gap-2">
 								<input type="text" id="h_pmn"
-									class="flex-grow p-2 text-sm border border-gray-200 rounded-lg input-focus w-3/4"
+									class="w-full p-2 bg-[#262626] border border-white/10 rounded-lg text-white text-xs outline-none focus:border-emerald-500"
 									value="Presentes">
-								<select id="h_pmn_lv"
-									class="p-1 text-xs border border-gray-200 rounded-lg input-focus w-15">
-									<option value="1">+</option>
-									<option value="2" selected>++</option>
-									<option value="3">+++</option>
-								</select>
+								<div class="segmented-control" data-target="h_pmn_lv">
+									<div class="segment-btn" data-value="1">+</div>
+									<div class="segment-btn active" data-value="2">++</div>
+									<div class="segment-btn" data-value="3">+++</div>
+									<input type="hidden" id="h_pmn_lv" value="2">
+								</div>
 							</div>
 						</div>
-						<div>
-							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Linfocitos</label>
+						<div class="space-y-2">
+							<label
+								class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Linfocitos</label>
 							<select id="h_linfocitos"
-								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus cursor-pointer">
+								class="w-full p-2 bg-[#262626] border border-white/10 rounded-lg text-white text-sm outline-none focus:border-emerald-500 cursor-pointer">
 								<option value="--------">--------</option>
 								<option value="Presentes">Presentes</option>
 							</select>
 						</div>
-						<div>
-							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Histiocitos</label>
+						<div class="space-y-2">
+							<label
+								class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Histiocitos</label>
 							<select id="h_histiocitos"
-								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus cursor-pointer">
+								class="w-full p-2 bg-[#262626] border border-white/10 rounded-lg text-white text-sm outline-none focus:border-emerald-500 cursor-pointer">
 								<option value="--------">--------</option>
 								<option value="Presentes">Presentes</option>
 							</select>
 						</div>
-						<div>
-							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Hematíes</label>
-							<div class="flex gap-2">
+						<div class="space-y-2">
+							<label
+								class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Hematíes</label>
+							<div class="flex flex-col gap-2">
 								<input type="text" id="h_hematies"
-									class="flex-grow p-2 text-sm border border-gray-200 rounded-lg input-focus w-3/4"
+									class="w-full p-2 bg-[#262626] border border-white/10 rounded-lg text-white text-xs outline-none focus:border-emerald-500"
 									value="--------">
-								<select id="h_hematies_lv"
-									class="p-1 text-xs border border-gray-200 rounded-lg input-focus w-15">
-									<option value="0"> </option>
-									<option value="1">+</option>
-									<option value="2">++</option>
-									<option value="3">+++</option>
-								</select>
+								<div class="segmented-control" data-target="h_hematies_lv">
+									<div class="segment-btn active" data-value="0">0</div>
+									<div class="segment-btn" data-value="1">+</div>
+									<div class="segment-btn" data-value="2">++</div>
+									<div class="segment-btn" data-value="3">+++</div>
+									<input type="hidden" id="h_hematies_lv" value="0">
+								</div>
 							</div>
 						</div>
-						<div>
-							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Bacterias</label>
+						<div class="space-y-2">
+							<label
+								class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Bacterias</label>
 							<select id="h_bacterias"
-								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus cursor-pointer">
+								class="w-full p-2 bg-[#262626] border border-white/10 rounded-lg text-white text-sm outline-none focus:border-emerald-500 cursor-pointer">
 								<option value="--------">--------</option>
 								<option value="Bacilar">Bacilar</option>
 								<option value="Cocobacilar">Cocobacilar</option>
 							</select>
 						</div>
-						<div>
-							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Candida sp</label>
+						<div class="space-y-2">
+							<label
+								class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Candida
+								sp</label>
 							<select id="h_candida"
-								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus cursor-pointer">
+								class="w-full p-2 bg-[#262626] border border-white/10 rounded-lg text-white text-sm outline-none focus:border-emerald-500 cursor-pointer">
 								<option value="--------">--------</option>
 								<option value="Presentes">Presentes</option>
 							</select>
 						</div>
-						<div>
-							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Gardnerella sp</label>
+						<div class="space-y-2">
+							<label
+								class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Gardnerella
+								sp</label>
 							<select id="h_gardnerella"
-								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus cursor-pointer">
+								class="w-full p-2 bg-[#262626] border border-white/10 rounded-lg text-white text-sm outline-none focus:border-emerald-500 cursor-pointer">
 								<option value="--------">--------</option>
 								<option value="Presentes">Presentes</option>
 							</select>
 						</div>
-						<div>
-							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Actinomyces sp</label>
+						<div class="space-y-2">
+							<label
+								class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Actinomyces
+								sp</label>
 							<select id="h_actinomyces"
-								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus cursor-pointer">
+								class="w-full p-2 bg-[#262626] border border-white/10 rounded-lg text-white text-sm outline-none focus:border-emerald-500 cursor-pointer">
 								<option value="--------">--------</option>
 								<option value="Presentes">Presentes</option>
 							</select>
 						</div>
-						<div>
-							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tricomonas
+						<div class="space-y-2">
+							<label
+								class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Tricomonas
 								vaginalis</label>
 							<select id="h_tricomonas"
-								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus cursor-pointer">
+								class="w-full p-2 bg-[#262626] border border-white/10 rounded-lg text-white text-sm outline-none focus:border-emerald-500 cursor-pointer">
 								<option value="--------">--------</option>
 								<option value="Presentes">Presentes</option>
 							</select>
 						</div>
-						<div>
-							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Virus del herpes</label>
+						<div class="space-y-2">
+							<label
+								class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Virus
+								del herpes</label>
 							<select id="h_herpes"
-								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus cursor-pointer">
+								class="w-full p-2 bg-[#262626] border border-white/10 rounded-lg text-white text-sm outline-none focus:border-emerald-500 cursor-pointer">
 								<option value="--------">--------</option>
 								<option value="Presentes">Presentes</option>
 							</select>
 						</div>
-						<div>
-							<label class="block text-xs font-bold text-gray-500 uppercase mb-1">Cambios
+						<div class="space-y-2">
+							<label
+								class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Cambios
 								epiteliales</label>
 							<input type="text" id="h_epiteliales"
-								class="w-full p-2 text-sm border border-gray-200 rounded-lg input-focus"
+								class="w-full p-2 bg-[#262626] border border-white/10 rounded-lg text-white text-sm outline-none focus:border-emerald-500"
 								value="Cambios reactivos">
 						</div>
 					</div>
 				</div>
 
-				<!-- 4. Resumen Bethesda -->
-				<div class="form-section glass p-8 rounded-2xl">
-					<h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center">
-						<span
-							class="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-3 text-sm">4</span>
-						Diagnóstico Final (Bethesda)
-					</h3>
-					<div class="space-y-6">
-						<div>
-							<label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Calidad de la
-								Muestra (Texto Largo)</label>
-							<textarea id="calidad_txt" rows="2"
-								class="w-full p-2 md:p-3 bg-white border border-gray-200 rounded-xl input-focus italic text-sm md:text-base"></textarea>
+				<!-- 4. Resumen Bethesda (Abajo de todo el ancho) -->
+				<div class="form-section glass p-8 rounded-2xl animate__animated animate__fadeInUp"
+					style="animation-delay: 0.1s">
+					<div class="flex items-center space-x-3 mb-8">
+						<i data-lucide="clipboard-check" class="text-emerald-500 w-6 h-6"></i>
+						<h3 class="text-lg font-bold uppercase tracking-wider" style="color: var(--text-title)">4.
+							Diagnóstico Final
+							(Bethesda)</h3>
+					</div>
+					<div class="space-y-8">
+						<div class="floating-label-group">
+							<textarea id="calidad_txt" rows="2" placeholder=" "
+								class="w-full p-4 bg-[#262626] border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500 italic transition-all"></textarea>
+							<label class="floating-label">Calidad de la Muestra (Descripción)</label>
 						</div>
-						<div>
-							<label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Categorización
-								General</label>
-							<input type="text" id="categorizacion"
-								class="w-full p-3 bg-white border border-gray-200 rounded-xl input-focus font-bold"
+						<div class="floating-label-group">
+							<input type="text" id="categorizacion" placeholder=" "
+								class="w-full p-4 bg-[#262626] border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500 font-bold transition-all"
 								value="NEGATIVO A LESIÓN INTRAEPITELIAL Y/O MALIGNIDAD">
+							<label class="floating-label">Categorización General</label>
 						</div>
-						<div>
-							<label
-								class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Interpretación</label>
-							<textarea id="interpretacion" rows="3"
-								class="w-full p-2 md:p-3 bg-white border border-gray-200 rounded-xl input-focus font-semibold text-blue-900 text-sm md:text-base"></textarea>
+						<div class="floating-label-group">
+							<textarea id="interpretacion" rows="3" placeholder=" "
+								class="w-full p-4 bg-[#262626] border border-white/10 rounded-xl text-emerald-500 outline-none focus:border-emerald-500 font-semibold transition-all"></textarea>
+							<label class="floating-label">Interpretación Citológica</label>
 						</div>
-						<div>
-							<label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Observaciones
-								Finales</label>
-							<textarea id="observaciones" rows="2"
-								class="w-full p-2 md:p-3 bg-white border border-gray-200 rounded-xl input-focus text-sm md:text-base"></textarea>
+						<div class="floating-label-group">
+							<textarea id="observaciones" rows="2" placeholder=" "
+								class="w-full p-4 bg-[#262626] border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500 transition-all"></textarea>
+							<label class="floating-label">Observaciones Finales (Opcional)</label>
 						</div>
 					</div>
 				</div>
 
 				<!-- Botón de Acción -->
-				<div class="pt-6 flex flex-col items-center">
+				<div class="pt-6 pb-12 flex flex-col items-center">
 					<button id="btnDownload"
-						class="btn-premium text-white font-bold py-5 px-12 rounded-2xl shadow-2xl flex items-center space-x-3 text-lg group">
-						<svg class="w-6 h-6 group-hover:animate-bounce" fill="none" stroke="currentColor"
-							viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-								d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-							</path>
-						</svg>
-						<span>Finalizar y Descargar .DOCX</span>
+						class="btn-premium text-gray-900 font-bold py-5 px-12 rounded-2xl shadow-2xl flex items-center space-x-3 text-lg group transition-transform active:scale-95">
+						<i data-lucide="send"
+							class="w-6 h-6 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform"></i>
+						<span>Finalizar y Redactar Correo</span>
 					</button>
+					<p class="mt-4 text-xs font-medium" style="color: var(--text-muted)">Se generarán los archivos y se
+						abrirá el borrador de correo</p>
 				</div>
 			</div>
 		</main>
 
-		<footer class="text-center py-8 text-gray-400 text-sm">
-			&copy; 2026 LabReport Pro - Estandarización Citopatológica
+		<!-- Modal: Gestión de Médicos -->
+		<div id="doctorsModal"
+			class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-xl p-4">
+			<div
+				class="glass w-full max-w-md rounded-[2.5rem] p-10 animate__animated animate__zoomIn border-white/10 shadow-[0_32px_80px_rgba(0,0,0,0.6)]">
+				<div class="flex justify-between items-center mb-10">
+					<div class="flex items-center space-x-4">
+						<div
+							class="w-12 h-12 bg-emerald-500/20 rounded-2xl flex items-center justify-center text-emerald-500 shadow-inner">
+							<i data-lucide="user-plus" class="w-7 h-7"></i>
+						</div>
+						<h3 class="text-2xl font-bold tracking-tight" style="color: var(--text-title)">Nuevo Médico</h3>
+					</div>
+					<button id="btnCloseDoctors"
+						class="w-10 h-10 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all border border-transparent hover:border-white/10">
+						<i data-lucide="x" class="w-6 h-6"></i>
+					</button>
+				</div>
+
+				<div class="space-y-8">
+					<div class="floating-label-group">
+						<input type="text" id="newDoctorName" placeholder=" "
+							class="w-full p-4 bg-[#1a1a1a] border border-white/10 rounded-2xl text-white outline-none focus:border-emerald-500 transition-all font-bold text-lg">
+						<label class="floating-label">Nombre Completo del Médico</label>
+					</div>
+
+					<div class="bg-black/30 p-8 rounded-[2rem] border border-white/5 space-y-6">
+						<p class="text-[11px] font-black text-emerald-500 uppercase tracking-[0.2em] mb-2 text-center">
+							Configuraciones de Usuario</p>
+
+						<div class="space-y-5">
+							<!-- Custom Switch Toggle: DOCX -->
+							<div class="flex items-center justify-between group">
+								<span
+									class="text-sm font-bold text-gray-200 group-hover:text-emerald-400 transition-colors"
+									style="color: var(--text-main)">Generación
+									de DOCX</span>
+								<label class="relative inline-flex items-center cursor-pointer">
+									<input type="checkbox" id="setupDocx" class="sr-only peer" checked>
+									<div
+										class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500">
+									</div>
+								</label>
+							</div>
+
+							<!-- Custom Switch Toggle: PDF -->
+							<div class="flex items-center justify-between group">
+								<span
+									class="text-sm font-bold text-gray-200 group-hover:text-emerald-400 transition-colors"
+									style="color: var(--text-main)">Generación
+									de PDF</span>
+								<label class="relative inline-flex items-center cursor-pointer">
+									<input type="checkbox" id="setupPdf" class="sr-only peer">
+									<div
+										class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500">
+									</div>
+								</label>
+							</div>
+
+							<!-- Custom Switch Toggle: Watermark -->
+							<div class="flex items-center justify-between group border-t border-white/5 pt-4"
+								style="border-top-color: var(--border)">
+								<span
+									class="text-sm font-bold text-gray-200 group-hover:text-emerald-400 transition-colors"
+									style="color: var(--text-main)">Firma
+									/ Marca de Agua</span>
+								<label class="relative inline-flex items-center cursor-pointer">
+									<input type="checkbox" id="setupWatermark" class="sr-only peer">
+									<div
+										class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500">
+									</div>
+								</label>
+							</div>
+						</div>
+					</div>
+
+					<button id="btnAddDoctor"
+						class="w-full py-5 bg-emerald-500 text-gray-950 font-black rounded-2xl flex items-center justify-center space-x-3 hover:bg-emerald-400 transform active:scale-95 transition-all shadow-xl shadow-emerald-500/30 text-lg uppercase tracking-wider">
+						<i data-lucide="save" class="w-6 h-6"></i>
+						<span>Registrar Médico</span>
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<footer class="text-center py-12 text-gray-500 text-sm">
+			&copy; 2026 LabReport Pro - Medical Diagnostic Intelligence
 		</footer>
 	</div>
 
 	<script>
+		// Theme Toggle Logic
+		const themeToggle = document.getElementById('themeToggle');
+		const themeIcon = document.getElementById('themeIcon');
+		const body = document.body;
+
+		// Load saved theme
+		const savedTheme = localStorage.getItem('lab_theme') || 'dark';
+		if (savedTheme === 'light') {
+			body.classList.add('light-mode');
+			updateThemeIcon('moon'); // If Light, show Moon to switch to Dark
+		} else {
+			updateThemeIcon('sun'); // If Dark, show Sun to switch to Light
+		}
+
+		themeToggle.addEventListener('click', () => {
+			body.classList.toggle('light-mode');
+			const isLight = body.classList.contains('light-mode');
+			localStorage.setItem('lab_theme', isLight ? 'light' : 'dark');
+			updateThemeIcon(isLight ? 'moon' : 'sun');
+		});
+
+		function updateThemeIcon(name) {
+			const themeIcon = document.getElementById('themeIcon');
+			if (!themeIcon) return;
+			const parent = themeIcon.parentElement;
+			parent.innerHTML = `<i data-lucide="${name}" id="themeIcon" class="w-5 h-5 transition-all duration-300 animate__animated animate__rotateIn"></i>`;
+			lucide.createIcons();
+		}
+
+		// Inicializar Lucide
+		lucide.createIcons();
 		// Lógica de Login
 		const passwordInput = document.getElementById('password');
 		const togglePasswordBtn = document.getElementById('togglePassword');
@@ -462,18 +840,334 @@
 			const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
 			passwordInput.setAttribute('type', type);
 
-			// Cambiar icono
-			if (type === 'text') {
-				eyeIcon.innerHTML = `
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.05 10.05 0 011.66-3.825M10.125 5.175A10.05 10.05 0 0112 5c4.477 0 8.268 2.943 9.542 7a10.05 10.05 0 01-1.66 3.825m-3.414-3.414a3 3 0 11-4.242-4.242" />
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18" />
-				`;
-			} else {
-				eyeIcon.innerHTML = `
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-				`;
+			// Cambiar icono con Lucide
+			const iconName = type === 'text' ? 'eye-off' : 'eye';
+			const eyeIconParent = eyeIcon.parentElement;
+			eyeIconParent.innerHTML = `<i data-lucide="${iconName}" id="eyeIcon" class="w-6 h-6"></i>`;
+			lucide.createIcons();
+		});
+
+		// Segmented Control Logic
+		document.querySelectorAll('.segmented-control').forEach(control => {
+			const targetId = control.getAttribute('data-target');
+			const hiddenInput = document.getElementById(targetId);
+			const buttons = control.querySelectorAll('.segment-btn');
+
+			buttons.forEach(btn => {
+				btn.addEventListener('click', () => {
+					buttons.forEach(b => b.classList.remove('active'));
+					btn.classList.add('active');
+					hiddenInput.value = btn.getAttribute('data-value');
+					updateLivePreview();
+				});
+			});
+		});
+
+		// Master Catalog of Doctors from Image
+		const MASTER_DOCTORS = [
+			{ name: "Alma Delia Gonzáles Pérez", pdf: true, docx: true, watermark: true },
+			{ name: "Karla Paola Lara Guerrero", pdf: false, docx: true, watermark: false },
+			{ name: "Juan Amed Cruz Santiago", pdf: false, docx: true, watermark: false },
+			{ name: "Nancy Lorena Cruz Cruz", pdf: true, docx: true, watermark: false },
+			{ name: "Giovanni Tapia Sosa", pdf: true, docx: true, watermark: false },
+			{ name: "Rigoberta López Zamora", pdf: false, docx: true, watermark: false },
+			{ name: "Sara Lei Gabriela Ramírez Cuautle", pdf: false, docx: true, watermark: false },
+			{ name: "Rita Galan", pdf: true, docx: true, watermark: true },
+			{ name: "Jovany Velazquez Ruiz", pdf: false, docx: true, watermark: false },
+			{ name: "Luz Marian Ramos Bolaños", pdf: true, docx: true, watermark: true },
+			{ name: "Dalia Cruz", pdf: false, docx: true, watermark: false },
+			{ name: "Areli Reyes Gonzalez", pdf: false, docx: true, watermark: false },
+			{ name: "Nailet González", pdf: false, docx: true, watermark: false },
+			{ name: "Gabriel García Díaz", pdf: false, docx: true, watermark: false },
+			{ name: "Versahin Mendoza", pdf: false, docx: true, watermark: false },
+			{ name: "Ib Laboratorios Eloy Aca", pdf: true, docx: true, watermark: true },
+			{ name: "Olivia Reséndiz Hernández", pdf: false, docx: true, watermark: false },
+			{ name: "Tejeda", pdf: false, docx: true, watermark: false },
+			{ name: "María Isabel Lobatón Paredes", pdf: false, docx: true, watermark: false },
+			{ name: "Trinidad Campos Benítez", pdf: false, docx: true, watermark: false },
+			{ name: "Cerezo", pdf: false, docx: true, watermark: false },
+			{ name: "Medicscanner", pdf: true, docx: true, watermark: false },
+			{ name: "Daniel Galicia", pdf: false, docx: true, watermark: false },
+			{ name: "CEDIC A.Q.C", pdf: false, docx: true, watermark: false },
+			{ name: "Laboratorio RNA A.Q.C CERVANTEZ", pdf: false, docx: true, watermark: false },
+			{ name: "Miguel Angel Ruiz Iturbe", pdf: false, docx: true, watermark: false },
+			{ name: "Rita Elizabeth López Hernández", pdf: false, docx: true, watermark: false },
+			{ name: "Tico Lab Edith Carranco", pdf: false, docx: true, watermark: false },
+			{ name: "Roberta Flores Sanchez", pdf: false, docx: true, watermark: false },
+			{ name: "Belén Vázquez Gonzáles", pdf: false, docx: true, watermark: false },
+			{ name: "Oscar Sanchez Fernandez", pdf: false, docx: true, watermark: false },
+			{ name: "Lab. Del Sur", pdf: false, docx: true, watermark: false },
+			{ name: "Bioanálisis", pdf: true, docx: true, watermark: false },
+			{ name: "Paula Rendon Oropeza", pdf: false, docx: true, watermark: false },
+			{ name: "Julieta del Razo Méndez", pdf: false, docx: true, watermark: false },
+			{ name: "Guadalupe Briseño Serrano", pdf: true, docx: true, watermark: false },
+			{ name: "Flores Márquez", pdf: false, docx: true, watermark: false },
+			{ name: "Hospital de la mujer", pdf: false, docx: true, watermark: false },
+			{ name: "Ramiro Isaí Martínez Huerta", pdf: false, docx: true, watermark: false },
+			{ name: "Ezequias Hernández Cabrera", pdf: true, docx: true, watermark: true },
+			{ name: "Rocío Reyes Fernández", pdf: false, docx: true, watermark: false },
+			{ name: "Isaí Villanueva", pdf: false, docx: true, watermark: false },
+			{ name: "Lab. Cerrentes AQC", pdf: true, docx: true, watermark: false },
+			{ name: "Reina J. Zarate Montes", pdf: true, docx: true, watermark: false },
+			{ name: "Magdalena Garcia Galicia", pdf: false, docx: true, watermark: false },
+			{ name: "María del Rocio Reyes Fernández", pdf: true, docx: true, watermark: true },
+			{ name: "Judith Marin Carballido", pdf: false, docx: true, watermark: false },
+			{ name: "Rocio Sanchez Fernández", pdf: false, docx: true, watermark: false },
+			{ name: "ZAMARIA", pdf: false, docx: true, watermark: false },
+			{ name: "Miguel Angel López Martínez", pdf: true, docx: true, watermark: false },
+			{ name: "Karen Abigail Zambrano", pdf: true, docx: true, watermark: false },
+			{ name: "Rigoberto Cerezo Reyes", pdf: false, docx: true, watermark: false },
+			{ name: "Guadalupe Hidalgo", pdf: false, docx: true, watermark: false },
+			{ name: "Francisco Avalos", pdf: false, docx: true, watermark: false },
+			{ name: "Hospital Gpe. Hgo.", pdf: true, docx: true, watermark: false },
+			{ name: "ISSSTEP", pdf: false, docx: true, watermark: false },
+			{ name: "Isaac Román Lechuga Pérez", pdf: false, docx: true, watermark: false },
+			{ name: "García Juarez", pdf: false, docx: true, watermark: false },
+			{ name: "Tita Corona", pdf: false, docx: true, watermark: false },
+			{ name: "CEEAD", pdf: false, docx: true, watermark: true },
+			{ name: "Melissa Gretel Ignacio García", pdf: true, docx: true, watermark: true },
+			{ name: "Ivan Bautista Rosas", pdf: false, docx: true, watermark: false },
+			{ name: "Victoria Sanchéz Fuentes", pdf: false, docx: true, watermark: false },
+			{ name: "Jennifer Carrera Mejía", pdf: true, docx: true, watermark: false },
+			{ name: "Gerardo Martinez Muñoz", pdf: false, docx: true, watermark: false },
+			{ name: "LOBATON", pdf: false, docx: true, watermark: false }
+		];
+
+		// Doctor Management Logic
+		let customDoctors = JSON.parse(localStorage.getItem('lab_doctors') || '[]');
+
+		function getUnifiedDoctors() {
+			const masterNames = MASTER_DOCTORS.map(d => d.name);
+			const filteredCustom = customDoctors.filter(d => !masterNames.includes(d.name));
+			return [...MASTER_DOCTORS, ...filteredCustom];
+		}
+
+		function renderDoctors() {
+			// No longer strictly necessary to render a list in the modal based on user request
+			updateDoctorDropdown();
+		}
+
+		function addDoctor() {
+			const input = document.getElementById('newDoctorName');
+			const name = input.value.trim().replace('Dr. ', '').replace('Dra. ', '');
+			if (name) {
+				const masterNames = MASTER_DOCTORS.map(d => d.name.toLowerCase());
+				if (masterNames.includes(name.toLowerCase())) {
+					Swal.fire({
+						icon: 'warning',
+						title: 'Médico ya existe',
+						text: 'Este profesional ya forma parte del catálogo maestro.',
+						background: 'var(--surface)',
+						color: 'var(--text-main)',
+						confirmButtonColor: 'var(--primary)'
+					});
+					return;
+				}
+
+				const existingCustom = customDoctors.find(d => d.name.toLowerCase() === name.toLowerCase());
+				if (existingCustom) {
+					Swal.fire({
+						icon: 'info',
+						title: 'Ya registrado',
+						text: 'Este médico ya ha sido agregado previamente a sus personalizados.',
+						background: 'var(--surface)',
+						color: 'var(--text-main)',
+						confirmButtonColor: 'var(--primary)'
+					});
+					return;
+				}
+
+				const newDoc = {
+					name: name,
+					docx: document.getElementById('setupDocx').checked,
+					pdf: document.getElementById('setupPdf').checked,
+					watermark: document.getElementById('setupWatermark').checked
+				};
+
+				customDoctors.push(newDoc);
+				localStorage.setItem('lab_doctors', JSON.stringify(customDoctors));
+
+				input.value = '';
+				document.getElementById('doctorsModal').classList.add('hidden');
+				updateDoctorDropdown();
+
+				Swal.fire({
+					icon: 'success',
+					title: 'Médico Registrado',
+					text: `Dr(a). ${name} ha sido guardado exitosamente.`,
+					timer: 2500,
+					showConfirmButton: false,
+					background: 'var(--surface)',
+					color: 'var(--text-main)'
+				});
 			}
+		}
+
+		function removeDoctor(name) {
+			customDoctors = customDoctors.filter(d => d !== name);
+			localStorage.setItem('lab_doctors', JSON.stringify(customDoctors));
+			renderDoctors();
+		}
+
+		document.getElementById('btnAddDoctor').addEventListener('click', addDoctor);
+		document.getElementById('btnManageDoctors').addEventListener('click', () => {
+			document.getElementById('doctorsModal').classList.remove('hidden');
+			renderDoctors();
+		});
+
+		document.getElementById('btnCloseDoctors').addEventListener('click', () => {
+			document.getElementById('doctorsModal').classList.add('hidden');
+		});
+
+		// Searchable Doctor Dropdown
+		const medicoInput = document.getElementById('medico');
+		const doctorDropdown = document.getElementById('doctorDropdown');
+
+		function applyDoctorConfig(docObj) {
+			document.getElementById('exportDocx').checked = docObj.docx;
+			document.getElementById('exportPdf').checked = docObj.pdf;
+			document.getElementById('includeWatermark').checked = docObj.watermark;
+
+			// Visual highlight on export panel
+			const exportPanel = document.querySelector('.form-section.glass');
+			exportPanel.classList.add('animate__pulse');
+			setTimeout(() => exportPanel.classList.remove('animate__pulse'), 1000);
+		}
+
+		function updateDoctorDropdown(showAll = false) {
+			const val = medicoInput.value.toLowerCase().replace('dr. ', '').replace('dra. ', '').trim();
+			const all = getUnifiedDoctors();
+			const filtered = showAll ? all : all.filter(d => d.name.toLowerCase().includes(val));
+
+			doctorDropdown.innerHTML = '';
+			if (filtered.length > 0 && (val.length > 0 || showAll)) {
+				filtered.forEach(docObj => {
+					const div = document.createElement('div');
+					div.className = 'p-3 hover:bg-emerald-500 hover:text-gray-900 cursor-pointer text-white transition-colors border-b border-white/5 last:border-0';
+					div.innerHTML = `<div class="flex justify-between items-center">
+						<span class="font-medium">${docObj.name}</span>
+						<span class="text-[8px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-500 font-bold uppercase">${docObj.watermark ? 'Con Sello' : 'Limpio'}</span>
+					</div>`;
+					div.onclick = (e) => {
+						e.stopPropagation();
+						medicoInput.value = "Dr. " + docObj.name;
+						doctorDropdown.classList.add('hidden');
+						applyDoctorConfig(docObj);
+						updateLivePreview();
+					};
+					doctorDropdown.appendChild(div);
+				});
+				doctorDropdown.classList.remove('hidden');
+			} else {
+				doctorDropdown.classList.add('hidden');
+			}
+		}
+
+		medicoInput.addEventListener('focus', () => updateDoctorDropdown(true));
+		medicoInput.addEventListener('click', (e) => {
+			e.stopPropagation();
+			updateDoctorDropdown(true);
+		});
+		medicoInput.addEventListener('input', () => updateDoctorDropdown(false));
+
+		// Close dropdown when clicking outside
+		document.addEventListener('click', (e) => {
+			if (!medicoInput.contains(e.target) && !doctorDropdown.contains(e.target)) {
+				doctorDropdown.classList.add('hidden');
+			}
+		});
+		document.addEventListener('click', (e) => {
+			if (!medicoInput.contains(e.target) && !doctorDropdown.contains(e.target)) {
+				doctorDropdown.classList.add('hidden');
+			}
+		});
+
+		// OCR Logic (Tesseract.js)
+		const ocrInput = document.getElementById('ocrInput');
+		const ocrDropzone = document.getElementById('ocrDropzone');
+		const ocrStatus = document.getElementById('ocrStatus');
+		const ocrDraft = document.getElementById('ocrDraft');
+
+		ocrDropzone.addEventListener('click', () => ocrInput.click());
+		ocrDropzone.addEventListener('dragover', (e) => { e.preventDefault(); ocrDropzone.classList.add('border-emerald-500'); });
+		ocrDropzone.addEventListener('dragleave', () => ocrDropzone.classList.remove('border-emerald-500'));
+		ocrDropzone.addEventListener('drop', (e) => {
+			e.preventDefault();
+			ocrDropzone.classList.remove('border-emerald-500');
+			const file = e.dataTransfer.files[0];
+			if (file) processOCR(file);
+		});
+		ocrInput.addEventListener('change', (e) => {
+			const file = e.target.files[0];
+			if (file) processOCR(file);
+		});
+
+		async function processOCR(file) {
+			ocrStatus.classList.remove('hidden');
+			ocrStatus.textContent = 'Procesando imagen...';
+
+			// Pre-procesamiento con Canvas
+			const img = new Image();
+			img.src = URL.createObjectURL(file);
+			await new Promise(r => img.onload = r);
+
+			const canvas = document.createElement('canvas');
+			const ctx = canvas.getContext('2d');
+			canvas.width = img.width;
+			canvas.height = img.height;
+
+			// Dibujar y aplicar filtros (Escala de grises y contraste)
+			ctx.filter = 'grayscale(1) contrast(1.5) brightness(1.1)';
+			ctx.drawImage(img, 0, 0);
+
+			canvas.toBlob(async (blob) => {
+				try {
+					const { data: { text } } = await Tesseract.recognize(blob, 'spa');
+					ocrDraft.value = text;
+					ocrStatus.textContent = '¡Completado!';
+					setTimeout(() => ocrStatus.classList.add('hidden'), 3000);
+				} catch (err) {
+					console.error(err);
+					ocrStatus.textContent = 'Error al procesar';
+					ocrStatus.classList.add('text-red-500');
+				}
+			}, 'image/png');
+		}
+
+		// Live Preview Logic
+		function updateLivePreview() {
+			const header = document.getElementById('previewHeader');
+			const table = document.getElementById('previewTable');
+
+			const data = {
+				paciente: document.getElementById('paciente').value || "[PACIENTE]",
+				edad: document.getElementById('edad').value || "--",
+				medico: document.getElementById('medico').value || "Dr. ",
+				fecha: document.getElementById('fecha').value ? new Date(document.getElementById('fecha').value).toLocaleDateString() : new Date().toLocaleDateString(),
+				estudio: document.getElementById('estudio').value || "C26-",
+				calidad: document.getElementById('h_calidad').value,
+				resultado: document.getElementById('categorizacion').value
+			};
+
+			header.innerHTML = `
+				<div><strong>PACIENTE:</strong> ${data.paciente.toUpperCase()}</div>
+				<div><strong>EDAD:</strong> ${data.edad} años</div>
+				<div><strong>MÉDICO:</strong> ${data.medico}</div>
+				<div><strong>FECHA:</strong> ${data.fecha}</div>
+				<div><strong>ESTUDIO:</strong> ${data.estudio}</div>
+			`;
+
+			table.innerHTML = `
+				<div class="font-bold border-b border-gray-100">Calidad:</div>
+				<div class="border-b border-gray-100">${data.calidad}</div>
+				<div class="font-bold col-span-2 mt-2 bg-emerald-50 text-emerald-800 p-1 text-center rounded">${data.resultado}</div>
+			`;
+		}
+
+		// Listeners for all inputs to update preview
+		document.querySelectorAll('input, select, textarea').forEach(el => {
+			el.addEventListener('input', updateLivePreview);
+			el.addEventListener('change', updateLivePreview);
 		});
 
 		document.getElementById('loginForm').addEventListener('submit', (e) => {
@@ -486,8 +1180,26 @@
 				document.getElementById('loginScreen').style.display = 'none';
 				document.getElementById('appContent').style.display = 'block';
 				localStorage.setItem('labsys_logged', 'true');
+				// Toast de bienvenida
+				Swal.fire({
+					toast: true,
+					position: 'top-end',
+					icon: 'success',
+					title: 'Bienvenida, Dra. Gaby',
+					showConfirmButton: false,
+					timer: 3000,
+					background: 'var(--surface)',
+					color: 'var(--text-main)'
+				});
 			} else {
-				error.classList.remove('hidden');
+				Swal.fire({
+					icon: 'error',
+					title: 'Error de Acceso',
+					text: 'Usuario o contraseña incorrectos.',
+					background: 'var(--surface)',
+					color: 'var(--text-main)',
+					confirmButtonColor: 'var(--primary)'
+				});
 			}
 		});
 
@@ -598,19 +1310,40 @@
 		window.addEventListener('load', () => {
 			updateFields();
 			document.getElementById('fecha').valueAsDate = new Date();
-			document.getElementById('btnDownload').addEventListener('click', descargarDOCX);
+			document.getElementById('btnDownload').addEventListener('click', ejecutarExportacion);
 		});
 
-		async function descargarDOCX() {
-			const { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle, Table, TableRow, TableCell, WidthType, VerticalAlign, ImageRun, HeightRule } = window.docx;
+		// FUNCIONES REUTILIZABLES
 
-			const d = {
-				paciente: document.getElementById('paciente').value.toUpperCase() || "PACIENTE SIN NOMBRE",
-				edad: document.getElementById('edad').value ? document.getElementById('edad').value + " años" : "--",
-				medico: document.getElementById('medico').value || "Dr. ",
-				estudio: document.getElementById('estudio').value || "C26-000",
+		async function preloadImages(srcs) {
+			const promises = srcs.map(src => {
+				return new Promise((resolve) => {
+					fetch(src)
+						.then(res => res.blob())
+						.then(blob => {
+							const reader = new FileReader();
+							reader.onloadend = () => resolve(reader.result);
+							reader.readAsArrayBuffer(blob);
+						})
+						.catch(e => {
+							console.error("Load failed:", src);
+							resolve(null);
+						});
+				});
+			});
+			return Promise.all(promises);
+		}
+
+		function getFormData() {
+			const edadVal = document.getElementById('edad').value;
+			const medicoVal = document.getElementById('medico').value;
+			return {
+				paciente: document.getElementById('paciente').value.toUpperCase().trim() || "PACIENTE SIN NOMBRE",
+				edad: edadVal ? edadVal + " años" : "---",
+				medico: medicoVal || "Dr. ",
+				_medicoRaw: medicoVal,
+				estudio: document.getElementById('estudio').value.trim() || "C26-000",
 				fecha: new Date(document.getElementById('fecha').value).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }),
-
 				h_calidad: document.getElementById('h_calidad').value,
 				h_endocervicales: document.getElementById('h_endocervicales').value,
 				h_metaplasia: document.getElementById('h_metaplasia').value,
@@ -630,235 +1363,566 @@
 				h_tricomonas: document.getElementById('h_tricomonas').value,
 				h_herpes: document.getElementById('h_herpes').value,
 				h_epiteliales: document.getElementById('h_epiteliales').value,
-
 				calidad_txt: document.getElementById('calidad_txt').value,
 				categorizacion: document.getElementById('categorizacion').value,
 				interpretacion: document.getElementById('interpretacion').value,
 				observaciones: document.getElementById('observaciones').value
 			};
+		}
 
-			// Cargar imagen de firma
-			let firmaImg;
-			try {
-				const response = await fetch('firma.png');
-				firmaImg = await response.arrayBuffer();
-			} catch (e) {
-				console.error("No se pudo cargar firma.png");
+		function getRowValueWithDash(value) {
+			return value === "--------" || !value ? "" : value;
+		}
+
+		// FUNCIONES DE EXPORTACIÓN
+
+		async function ejecutarExportacion() {
+			const wantDocx = document.getElementById('exportDocx').checked;
+			const wantPdf = document.getElementById('exportPdf').checked;
+			const btn = document.getElementById('btnDownload');
+			const d = getFormData();
+
+			// Validaciones Clínicas
+			if (!d.paciente || d.paciente === "PACIENTE SIN NOMBRE" || d.paciente.trim() === "") {
+				Swal.fire({ icon: 'error', title: 'Campo requerido', text: 'Por favor ingresa el nombre de la paciente.', background: 'var(--surface)', color: 'var(--text-main)', confirmButtonColor: 'var(--primary)' });
+				document.getElementById('paciente').focus();
+				return;
+			}
+			if (!d.estudio || d.estudio.trim() === "" || d.estudio === "C26-") {
+				Swal.fire({ icon: 'error', title: 'Campo requerido', text: 'Por favor ingresa el número de estudio.', background: 'var(--surface)', color: 'var(--text-main)', confirmButtonColor: 'var(--primary)' });
+				document.getElementById('estudio').focus();
+				return;
+			}
+			if (!d._medicoRaw || d._medicoRaw === "Dr. " || d._medicoRaw.trim() === "") {
+				Swal.fire({ icon: 'error', title: 'Campo requerido', text: 'Por favor selecciona o ingresa el médico tratante.', background: 'var(--surface)', color: 'var(--text-main)', confirmButtonColor: 'var(--primary)' });
+				document.getElementById('medico').focus();
+				return;
 			}
 
-			const borderNone = { style: BorderStyle.NONE };
-			const borderThin = { style: BorderStyle.SINGLE, size: 2 };
+			if (!wantDocx && !wantPdf) {
+				alert("Por favor selecciona al menos un formato de exportación (.DOCX o .PDF)");
+				return;
+			}
 
-			const doc = new Document({
-				styles: {
-					default: {
-						document: {
-							run: {
-								font: "Arial Narrow",
+			btn.disabled = true;
+			const originalText = btn.querySelector('span').textContent;
+			btn.querySelector('span').textContent = "Generando archivos...";
+
+			try {
+				const useWatermark = document.getElementById('includeWatermark').checked;
+				const images = await preloadImages(useWatermark ? ['firma.png', 'watermark.png'] : ['firma.png']);
+				const signatureBuffer = images[0];
+				const watermarkBuffer = useWatermark ? images[1] : null;
+
+				// 1. Generar Documentos (DOCX / PDF)
+				if (wantDocx) {
+					console.log("Generando DOCX...");
+					await descargarDOCX(d, signatureBuffer, watermarkBuffer, useWatermark);
+				}
+				if (wantPdf) {
+					console.log("Generando PDF...");
+					await descargarPDF(d, signatureBuffer, watermarkBuffer, useWatermark);
+				}
+
+				// Small artificial delay to allow browser to trigger downloads
+				await new Promise(r => setTimeout(r, 800));
+
+				// 2. Transición Visual
+				btn.querySelector('span').textContent = "Documentos listos. Abriendo correo...";
+				const icon = btn.querySelector('i');
+				if (icon) icon.setAttribute('data-lucide', 'check-circle');
+				lucide.createIcons();
+
+				// 3. Abrir Correo
+				// await redactarCorreo(d);
+
+				// 4. Reset del estado tras éxito
+				setTimeout(() => {
+					btn.disabled = false;
+					btn.querySelector('span').textContent = originalText;
+					if (icon) icon.setAttribute('data-lucide', 'send');
+					lucide.createIcons();
+				}, 3000);
+
+			} catch (err) {
+				console.error(err);
+				alert("Error al procesar la exportación. Revisa la consola.");
+				btn.disabled = false;
+				btn.querySelector('span').textContent = originalText;
+			}
+		}
+
+		async function redactarCorreo(d) {
+			const subject = encodeURIComponent(`Reporte Citopatológico - ${d.paciente} - ${d.estudio}`);
+			let bodyText = `Hola,\n\nAdjunto envío el reporte citopatológico correspondiente:\n\n`;
+			bodyText += `PACIENTE: ${d.paciente}\n`;
+			bodyText += `ESTUDIO: ${d.estudio}\n`;
+			bodyText += `RESULTADO: ${d.categorizacion}\n\n`;
+			bodyText += `Saludos cordiales.`;
+
+			const mailtoLink = `mailto:?subject=${subject}&body=${encodeURIComponent(bodyText)}`;
+
+			// Intentar Web Share para adjuntar archivos si es compatible
+			if (navigator.share && navigator.canShare) {
+				try {
+					// Nota: Muchos navegadores solo permiten compartir 1 tipo o no permiten adjuntos en todas las plataformas.
+					// Al menos intentamos compartir el link o data.
+					await navigator.share({
+						title: 'Reporte LabReport Pro',
+						text: bodyText,
+					});
+				} catch (e) { window.location.href = mailtoLink; }
+			} else {
+				window.location.href = mailtoLink;
+			}
+		}
+
+		async function descargarPDF(d, signatureBuffer, watermarkBuffer, useWatermark) {
+			try {
+				const signatureBase64 = signatureBuffer ? `data:image/png;base64,${arrayBufferToBase64(signatureBuffer)}` : null;
+				const watermarkBase64 = watermarkBuffer ? `data:image/png;base64,${arrayBufferToBase64(watermarkBuffer)}` : null;
+
+				const docDefinition = {
+					pageSize: 'LETTER',
+					pageMargins: [65, 35, 65, 65], // Aumentar margen inferior para el footer
+					background: function (currentPage) {
+						if (currentPage === 1 && useWatermark && watermarkBase64) {
+							return {
+								image: watermarkBase64,
+								width: 612,
+								height: 792,
+								opacity: 0.28
+							};
+						}
+						return null;
+					},
+					content: [
+						// Encabezado
+						{ text: 'ESTUDIO CITOLÓGICO CONVENCIONAL', style: 'headerMain', margin: [0, 55, 0, 0] },
+						{ text: 'TINCIÓN: Papanicolaou', style: 'headerSub', margin: [0, 0, 0, 0] },
+
+						// Datos del Paciente (Compactos)
+						{ text: [{ text: 'PACIENTE: ', bold: true }, d.paciente], margin: [0, 0, 0, 2] },
+						{ text: [{ text: 'EDAD: ', bold: true }, d.edad], margin: [0, 0, 0, 2] },
+						{ text: [{ text: 'MÉDICO SOLICITANTE: ', bold: true }, d.medico], margin: [0, 0, 0, 2] },
+						{ text: [{ text: 'FECHA: ', bold: true }, d.fecha], margin: [0, 0, 0, 2] },
+						{ text: [{ text: 'NÚMERO DE ESTUDIO: ', bold: true }, d.estudio], margin: [0, 0, 0, 15] },
+
+						// Cuerpo
+						{
+							columns: [
+								{
+									width: '56%',
+									stack: [
+										{ text: 'INTERPRETACIÓN', style: 'sectionTitle' },
+										{
+											table: {
+												widths: ['40%', '35%', '25%'],
+												body: [
+													[{ text: 'Calidad de la muestra:', bold: true }, { text: getRowValueWithDash(d.h_calidad), colSpan: 2 }, ''],
+													[{ text: 'Células endocervicales:', bold: true }, { text: getRowValueWithDash(d.h_endocervicales), colSpan: 2 }, ''],
+													[{ text: 'Células de metaplasia:', bold: true }, { text: getRowValueWithDash(d.h_metaplasia), colSpan: 2 }, ''],
+													[{ text: 'Células endometriales:', bold: true }, { text: getRowValueWithDash(d.h_endometriales), colSpan: 2 }, ''],
+													[{ text: 'Reacción inflamatoria:', bold: true }, getRowValueWithDash(d.h_inflamatoria), { text: d.h_inflamatoria_lv > 0 ? '+'.repeat(Math.min(d.h_inflamatoria_lv, 3)) : '', alignment: 'center', bold: true }],
+													[{ text: 'Polimorfonucleares:', bold: true }, getRowValueWithDash(d.h_pmn), { text: d.h_pmn_lv > 0 ? '+'.repeat(Math.min(d.h_pmn_lv, 3)) : '', alignment: 'center', bold: true }],
+													[{ text: 'Linfocitos:', bold: true }, { text: getRowValueWithDash(d.h_linfocitos), colSpan: 2 }, ''],
+													[{ text: 'Histiocitos:', bold: true }, { text: getRowValueWithDash(d.h_histiocitos), colSpan: 2 }, ''],
+													[{ text: 'Hematíes:', bold: true }, getRowValueWithDash(d.h_hematies), { text: d.h_hematies_lv > 0 ? '+'.repeat(Math.min(d.h_hematies_lv, 3)) : '', alignment: 'center', bold: true }],
+													[{ text: 'Bacterias:', bold: true }, { text: getRowValueWithDash(d.h_bacterias), colSpan: 2 }, ''],
+													[{ text: 'Candida sp:', bold: true }, { text: getRowValueWithDash(d.h_candida), colSpan: 2 }, ''],
+													[{ text: 'Gardnerella sp:', bold: true }, { text: getRowValueWithDash(d.h_gardnerella), colSpan: 2 }, ''],
+													[{ text: 'Actinomyces sp:', bold: true }, { text: getRowValueWithDash(d.h_actinomyces), colSpan: 2 }, ''],
+													[{ text: 'Tricomonas vaginalis:', bold: true }, { text: getRowValueWithDash(d.h_tricomonas), colSpan: 2 }, ''],
+													[{ text: 'Cambios por virus del herpes:', bold: true }, { text: getRowValueWithDash(d.h_herpes), colSpan: 2 }, ''],
+													[{ text: 'Cambios epiteliales:', bold: true }, { text: getRowValueWithDash(d.h_epiteliales), colSpan: 2 }, '']
+												]
+											},
+											layout: {
+												hLineWidth: () => 0.6,
+												vLineWidth: () => 0.6,
+												hLineColor: () => '#333',
+												vLineColor: () => '#333',
+												paddingLeft: () => 6,
+												paddingRight: () => 6,
+												paddingTop: () => 4,
+												paddingBottom: () => 4
+											},
+											fontSize: 8.5
+										}
+									]
+								},
+								{
+									width: '44%',
+									margin: [10, 0, 0, 0],
+									stack: [
+										{ text: 'RESULTADO DE LA CITOLOGÍA', style: 'sectionTitle' },
+										{
+											table: {
+												widths: ['*'],
+												body: [[{
+													margin: [10, 10, 10, 10],
+													minHeight: 400,
+													stack: [
+														{ text: 'CALIDAD DE LA MUESTRA:', bold: true, fontSize: 9.5, margin: [0, 0, 0, 2] },
+														{ text: d.calidad_txt, margin: [0, 0, 0, 12], fontSize: 9.5 },
+														{ text: 'CATEGORIZACIÓN GENERAL:', bold: true, fontSize: 9.5, margin: [0, 0, 0, 2] },
+														{ text: '• ' + d.categorizacion, margin: [0, 0, 0, 12], fontSize: 9.5 },
+														{ text: 'INTERPRETACIÓN:', bold: true, fontSize: 9.5, margin: [0, 0, 0, 2] },
+														{ text: d.interpretacion, bold: true, color: 'black', margin: [0, 0, 0, 12], fontSize: 10 },
+														d.observaciones ? { text: 'OBSERVACIONES:', bold: true, fontSize: 9.5, margin: [0, 10, 0, 2] } : '',
+														d.observaciones ? { text: d.observaciones, fontSize: 9.5 } : '',
+														{ text: 'Sistema Bethesda 2014.', italics: true, fontSize: 8, alignment: 'center', margin: [0, 20, 0, 0] }
+													]
+												}]]
+											},
+											layout: {
+												hLineWidth: () => 0.6,
+												vLineWidth: () => 0.6,
+												hLineColor: () => '#333',
+												vLineColor: () => '#333'
+											}
+										}
+									]
+								}
+							]
+						},
+
+						// Firma
+						{
+							margin: [0, 25, 0, 0],
+							stack: [
+								signatureBase64 ? { image: signatureBase64, width: 110, margin: [0, 0, 0, 2] } : '',
+								{ text: 'ATENTAMENTE', bold: true, fontSize: 10 },
+								{ text: 'DRA. ALVA MARTÍNEZ ANGOA', bold: true, fontSize: 10, margin: [0, 1, 0, 0] },
+								{ text: 'Cédula 5928701', fontSize: 9 },
+								{ text: 'Residencia en Anatomía Patológica. Hospital General de México. UNAM.', fontSize: 7.5, color: '#444' },
+								{ text: 'Re-Certificada por el CMMA. No. 1014', fontSize: 7.5, color: '#444' }
+							]
+						}
+					],
+					styles: {
+						headerMain: { fontSize: 12.5, bold: true, color: '#111' },
+						headerSub: { fontSize: 10, color: '#444' },
+						sectionTitle: { fontSize: 10.5, bold: true, margin: [0, 0, 0, 6] }
+					},
+					defaultStyle: { font: 'Roboto', fontSize: 10, color: '#333' }
+				};
+
+				pdfMake.createPdf(docDefinition).download(`${d.estudio} ${d.paciente}.pdf`);
+			} catch (error) {
+				console.error('Error al generar el PDF con pdfmake:', error);
+				alert('Ocurrió un error al generar el PDF. Por favor, intente con DOCX.');
+			}
+		}
+
+		function arrayBufferToBase64(buffer, mimeType) {
+			const bytes = new Uint8Array(buffer);
+			let binary = '';
+			for (let i = 0; i < bytes.byteLength; i++) {
+				binary += String.fromCharCode(bytes[i]);
+			}
+			return window.btoa(binary);
+		}
+
+		async function descargarDOCX(d, signatureBuffer, watermarkBuffer, useWatermark) {
+			try {
+				const { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle, Table, TableRow, TableCell, WidthType, VerticalAlign, ImageRun, HeightRule, Header } = window.docx;
+
+				const borderNone = { style: BorderStyle.NONE };
+				const borderThin = { style: BorderStyle.SINGLE, size: 2 };
+
+				// Crear el contenido principal primero
+				const children = [
+					new Paragraph({
+						children: [new TextRun({ text: "ESTUDIO CITOLÓGICO CONVENCIONAL", bold: true, size: 22, font: "Arial Narrow" })],
+						alignment: AlignmentType.LEFT,
+						spacing: { before: 450 }
+					}),
+					new Paragraph({
+						children: [new TextRun({ text: "TINCIÓN: Papanicolaou", size: 22, font: "Arial Narrow" })],
+						alignment: AlignmentType.LEFT,
+					}),
+					new Paragraph({
+						children: [new TextRun({ text: "PACIENTE: " + d.paciente, size: 22, font: "Arial Narrow" })]
+					}),
+					new Paragraph({
+						children: [new TextRun({ text: "EDAD: " + d.edad, size: 22, font: "Arial Narrow" })]
+					}),
+					new Paragraph({
+						children: [new TextRun({ text: "MÉDICO SOLICITANTE: " + d.medico, size: 22, font: "Arial Narrow" })]
+					}),
+					new Paragraph({
+						children: [new TextRun({ text: "FECHA: " + d.fecha, size: 22, font: "Arial Narrow" })]
+					}),
+					new Paragraph({
+						children: [new TextRun({ text: "NÚMERO DE ESTUDIO: " + d.estudio, size: 22, font: "Arial Narrow" })],
+						spacing: { after: 200 }
+					}),
+
+					new Table({
+						width: { size: 100, type: WidthType.PERCENTAGE },
+						borders: {
+							top: borderNone,
+							bottom: borderNone,
+							left: borderNone,
+							right: borderNone,
+							insideHorizontal: borderNone,
+							insideVertical: borderNone,
+						},
+						spacing: { after: 10 },
+						rows: [
+							new TableRow({
+								children: [
+									new TableCell({
+										width: { size: 55, type: WidthType.PERCENTAGE },
+										verticalAlign: VerticalAlign.TOP,
+										borders: {
+											top: borderNone,
+											bottom: borderNone,
+											left: borderNone,
+											right: borderNone,
+										},
+										children: [
+											new Paragraph({
+												children: [new TextRun({ text: "INTERPRETACIÓN", bold: true, size: 26, font: "Arial Narrow" })],
+												alignment: AlignmentType.LEFT,
+												spacing: { after: 100 }
+											}),
+											new Table({
+												width: { size: 100, type: WidthType.PERCENTAGE },
+												rows: [
+													["Calidad de la muestra:", d.h_calidad],
+													["Células endocervicales:", d.h_endocervicales],
+													["Células de metaplasia:", d.h_metaplasia],
+													["Células endometriales:", d.h_endometriales],
+													["Reacción inflamatoria:", d.h_inflamatoria, d.h_inflamatoria_lv],
+													["Polimorfonucleares:", d.h_pmn, d.h_pmn_lv],
+													["Linfocitos:", d.h_linfocitos],
+													["Histiocitos:", d.h_histiocitos],
+													["Hematíes:", d.h_hematies, d.h_hematies_lv],
+													["Bacterias:", d.h_bacterias],
+													["Candida sp:", d.h_candida],
+													["Gardnerella sp:", d.h_gardnerella],
+													["Actinomyces sp:", d.h_actinomyces],
+													["Tricomonas vaginalis:", d.h_tricomonas],
+													["Cambios por virus del herpes:", d.h_herpes],
+													["Cambios epiteliales:", d.h_epiteliales],
+												].map(row => {
+													const labelsWithPlus = ["Reacción inflamatoria:", "Polimorfonucleares:", "Hematíes:"];
+													const isPlusRow = labelsWithPlus.includes(row[0]);
+													const value = getRowValueWithDash(row[1]);
+													const cells = [
+														new TableCell({
+															verticalAlign: VerticalAlign.TOP,
+															margins: { left: 100 },
+															children: [new Paragraph({
+																children: [new TextRun({ text: row[0], size: 20, font: "Arial Narrow", bold: true })]
+															})],
+															borders: borderThin
+														})
+													];
+
+													if (isPlusRow) {
+														const level = parseInt(row[2]) || 0;
+														const plusText = level > 0 ? "+".repeat(Math.min(level, 3)) : "";
+														cells.push(new TableCell({
+															verticalAlign: VerticalAlign.CENTER,
+															margins: { left: 100 },
+															children: [new Paragraph({
+																children: [new TextRun({ text: value, size: 20, font: "Arial Narrow" })],
+																alignment: AlignmentType.LEFT
+															})],
+															borders: borderThin
+														}));
+														cells.push(new TableCell({
+															verticalAlign: VerticalAlign.CENTER,
+															children: [new Paragraph({
+																children: [new TextRun({ text: plusText, size: 20, font: "Arial Narrow" })],
+																alignment: AlignmentType.CENTER
+															})],
+															borders: borderThin,
+															width: { size: 10, type: WidthType.PERCENTAGE }
+														}));
+													} else {
+														cells.push(new TableCell({
+															verticalAlign: VerticalAlign.CENTER,
+															columnSpan: 2,
+															margins: { left: 100 },
+															children: [new Paragraph({
+																children: [new TextRun({ text: value, size: 20, font: "Arial Narrow" })],
+																alignment: AlignmentType.LEFT
+															})],
+															borders: borderThin
+														}));
+													}
+													return new TableRow({
+														height: { value: 300, rule: HeightRule.ATLEAST },
+														children: cells
+													});
+												})
+											})
+										]
+									}),
+									new TableCell({
+										children: [],
+										borders: {
+											top: borderNone,
+											bottom: borderNone,
+											left: borderNone,
+											right: borderNone,
+										},
+										width: { size: 2, type: WidthType.PERCENTAGE }
+									}),
+									new TableCell({
+										width: { size: 43, type: WidthType.PERCENTAGE },
+										verticalAlign: VerticalAlign.TOP,
+										borders: {
+											top: borderNone,
+											bottom: borderNone,
+											left: borderNone,
+											right: borderNone,
+										},
+										children: [
+											new Paragraph({
+												children: [new TextRun({ text: "RESULTADO DE LA CITOLOGÍA", bold: true, size: 26, font: "Arial Narrow" })],
+												alignment: AlignmentType.LEFT,
+												spacing: { after: 100 }
+											}),
+											new Table({
+												width: { size: 100, type: WidthType.PERCENTAGE },
+												rows: [
+													new TableRow({
+														children: [
+															new TableCell({
+																margins: { bottom: 200, left: 100, right: 100 },
+																borders: borderThin,
+																children: [
+																	new Paragraph({
+																		children: [new TextRun({ text: "CALIDAD DE LA MUESTRA:", bold: true, size: 20, font: "Arial Narrow" })]
+																	}),
+																	new Paragraph({
+																		children: [new TextRun({ text: d.calidad_txt, size: 20, font: "Arial Narrow" })]
+																	}),
+																	new Paragraph({
+																		children: [new TextRun({ text: "CATEGORIZACIÓN GENERAL:", bold: true, size: 20, font: "Arial Narrow" })]
+																	}),
+																	new Paragraph({
+																		children: [new TextRun({ text: "• " + d.categorizacion, size: 20, font: "Arial Narrow" })],
+																		indent: { left: 400 }
+																	}),
+																	new Paragraph({
+																		children: [new TextRun({ text: "INTERPRETACIÓN:", bold: true, size: 20, font: "Arial Narrow" })]
+																	}),
+																	new Paragraph({
+																		children: [new TextRun({ text: d.interpretacion, bold: true, color: "000000", size: 20, font: "Arial Narrow" })]
+																	}),
+																	new Paragraph({
+																		children: [new TextRun({ text: d.observaciones, size: 20, font: "Arial Narrow" })]
+																	}),
+																	new Paragraph({
+																		children: [new TextRun({ text: "Sistema Bethesda 2014.", italics: true, size: 18, font: "Arial Narrow" })],
+																		spacing: { before: 1600 }
+																	})
+																]
+															})
+														]
+													})
+												]
+											})
+										]
+									})
+								]
+							})
+						]
+					}),
+
+					new Paragraph({ spacing: { before: 50 } }),
+					signatureBuffer ? new Paragraph({
+						children: [new ImageRun({
+							data: signatureBuffer,
+							transformation: { width: 106, height: 63 }
+						})],
+						alignment: AlignmentType.LEFT,
+					}) : new Paragraph({ children: [new TextRun("")] }),
+					new Paragraph({
+						children: [new TextRun({ text: "ATENTAMENTE", bold: true, size: 20, font: "Arial Narrow" })]
+					}),
+					new Paragraph({
+						children: [new TextRun({ text: "DRA. ALVA MARTÍNEZ ANGOA", bold: true, size: 20, font: "Arial Narrow" })]
+					}),
+					new Paragraph({
+						children: [new TextRun({ text: "Cédula 5928701", size: 20, font: "Arial Narrow" })]
+					}),
+					new Paragraph({
+						children: [new TextRun({ text: "Residencia en Anatomía Patológica. Hospital General de México. UNAM.", size: 20, font: "Arial Narrow" })]
+					}),
+					new Paragraph({
+						children: [new TextRun({ text: "Re-Certificada por el CMMA. No. 1014", size: 20, font: "Arial Narrow" })]
+					})
+				];
+
+
+				const doc = new Document({
+					styles: {
+						default: {
+							document: {
+								run: { font: "Arial Narrow", size: 20 },
 							},
 						},
 					},
-				},
-				sections: [{
-					properties: { margin: { top: 720, right: 900, bottom: 720, left: 600 } },
-					children: [
-						new Paragraph({
-							children: [new TextRun({ text: "ESTUDIO CITOLÓGICO CONVENCIONAL", bold: true, size: 22, font: "Arial Narrow" })],
-							alignment: AlignmentType.LEFT, spacing: { before: 720 }
-						}),
-						new Paragraph({
-							children: [new TextRun({ text: "TINCIÓN: Papanicolaou", size: 22, font: "Arial Narrow" })],
-							alignment: AlignmentType.LEFT,
-						}),
-
-						// DATOS ADMINISTRATIVOS COMO PÁRRAFOS INDEPENDIENTES
-						new Paragraph({ children: [new TextRun({ text: "PACIENTE: ", size: 22, font: "Arial Narrow" }), new TextRun({ text: d.paciente, size: 22, font: "Arial Narrow" })] }),
-						new Paragraph({ children: [new TextRun({ text: "EDAD: ", size: 22, font: "Arial Narrow" }), new TextRun({ text: d.edad, size: 22, font: "Arial Narrow" })] }),
-						new Paragraph({ children: [new TextRun({ text: "MÉDICO SOLICITANTE: ", size: 22, font: "Arial Narrow" }), new TextRun({ text: d.medico, size: 22, font: "Arial Narrow" })] }),
-						new Paragraph({ children: [new TextRun({ text: "FECHA: ", size: 22, font: "Arial Narrow" }), new TextRun({ text: d.fecha, size: 22, font: "Arial Narrow" })] }),
-
-						new Paragraph({ children: [new TextRun({ text: "NÚMERO DE ESTUDIO: ", size: 22, font: "Arial Narrow" }), new TextRun({ text: d.estudio, size: 22, font: "Arial Narrow" })], spacing: { after: 400 } }),
-
-						// RESULTADOS (TABLA MODULAR)
-						new Table({
-							width: { size: 100, type: WidthType.PERCENTAGE },
-							borders: {
-								top: borderNone,
-								bottom: borderNone,
-								left: borderNone,
-								right: borderNone,
-								insideHorizontal: borderNone,
-								insideVertical: borderNone,
+					sections: [{
+						properties: {
+							page: {
+								size: { width: 12240, height: 15840 }, // Letter size in twips (8.5 x 11 in)
 							},
-							rows: [
-								new TableRow({
-									children: [
-										new TableCell({
-											width: { size: 55, type: WidthType.PERCENTAGE },
-											verticalAlign: VerticalAlign.TOP,
-											children: [
-												new Paragraph({ children: [new TextRun({ text: "INTERPRETACIÓN", bold: true, size: 20, font: "Arial Narrow" })], spacing: { after: 100 } }),
-												new Table({
-													width: { size: 100, type: WidthType.PERCENTAGE },
-													rows: [
-														["Calidad de la muestra:", d.h_calidad],
-														["Células endocervicales:", d.h_endocervicales],
-														["Células de metaplasia:", d.h_metaplasia],
-														["Células endometriales:", d.h_endometriales],
-														["Reacción inflamatoria:", d.h_inflamatoria, d.h_inflamatoria_lv],
-														["Polimorfonucleares:", d.h_pmn, d.h_pmn_lv],
-														["Linfocitos:", d.h_linfocitos],
-														["Histiocitos:", d.h_histiocitos],
-														["Hematíes:", d.h_hematies, d.h_hematies_lv],
-														["Bacterias:", d.h_bacterias],
-														["Candida sp:", d.h_candida],
-														["Gardnerella sp:", d.h_gardnerella],
-														["Actinomyces sp:", d.h_actinomyces],
-														["Tricomonas vaginalis:", d.h_tricomonas],
-														["Cambios por virus del herpes:", d.h_herpes],
-														["Cambios epiteliales:", d.h_epiteliales],
-													].map(row => {
-														const labelsWithPlus = ["Reacción inflamatoria:", "Polimorfonucleares:", "Hematíes:"];
-														const isPlusRow = labelsWithPlus.includes(row[0]);
+							margin: { top: 450, right: 720, bottom: 720, left: 720 }
+						},
+						headers: (useWatermark && watermarkBuffer) ? {
+							default: new Header({
+								children: [
+									new Paragraph({
+										children: [
+											new ImageRun({
+												data: watermarkBuffer,
+												transformation: {
+													width: 12240 / 323.85 * 21.56,
+													height: 15840 / 419.1 * 27.9
+												},
+												floating: {
+													horizontalPosition: { relative: "page", align: "center" },
+													verticalPosition: { relative: "page", align: "center" },
+													behindDoc: true
+												}
+											})
+										]
+									})
+								]
+							})
+						} : {},
+						children: children
+					}]
+				});
 
-														const cells = [
-															new TableCell({
-																verticalAlign: VerticalAlign.TOP,
-																margins: { left: 100, bottom: 100 },
-																children: [new Paragraph({
-																	children: [new TextRun({ text: row[0], size: 20, font: "Arial Narrow", bold: true })]
-																})],
-																borders: borderThin
-															})
-														];
+				const blob = await Packer.toBlob(doc);
 
-														if (isPlusRow) {
-															// Row with 3 columns: Label, Value (Left), Dynamic + (Center)
-															// row[2] contains the level from our new selector (1, 2 or 3)
-															const level = parseInt(row[2]) || 0;
-															const plusText = level > 0 ? "+".repeat(Math.min(level, 3)) : "";
-
-															cells.push(new TableCell({
-																verticalAlign: VerticalAlign.CENTER,
-																margins: { left: 100, bottom: 100 },
-																children: [new Paragraph({
-																	children: [new TextRun({ text: row[1], size: 20, font: "Arial Narrow" })],
-																	alignment: AlignmentType.LEFT
-																})],
-																borders: borderThin
-															}));
-															cells.push(new TableCell({
-																verticalAlign: VerticalAlign.CENTER,
-																children: [new Paragraph({
-																	children: [new TextRun({ text: plusText, size: 20, font: "Arial Narrow" })],
-																	alignment: AlignmentType.CENTER
-																})],
-																borders: borderThin,
-																width: { size: 10, type: WidthType.PERCENTAGE }
-															}));
-														} else {
-															// Merged row: Label, Value (Left, spans 2 columns)
-															cells.push(new TableCell({
-																verticalAlign: VerticalAlign.CENTER,
-																columnSpan: 2,
-																margins: { left: 100, bottom: 100 },
-																children: [new Paragraph({
-																	children: [new TextRun({ text: row[1], size: 20, font: "Arial Narrow" })],
-																	alignment: AlignmentType.LEFT
-																})],
-																borders: borderThin
-															}));
-														}
-
-														return new TableRow({
-															height: { value: 300, rule: HeightRule.ATLEAST },
-															children: cells
-														});
-													})
-												})
-											],
-											borders: borderNone
-										}),
-										new TableCell({ children: [], borders: borderNone, width: { size: 2, type: WidthType.PERCENTAGE } }),
-										new TableCell({
-											width: { size: 43, type: WidthType.PERCENTAGE },
-											verticalAlign: VerticalAlign.TOP,
-											children: [
-												new Paragraph({ children: [new TextRun({ text: "RESULTADO DE LA CITOLOGÍA", bold: true, size: 20, font: "Arial Narrow" })], spacing: { after: 100 } }),
-												new Table({
-													width: { size: 100, type: WidthType.PERCENTAGE },
-													rows: [
-														new TableRow({
-															children: [
-																new TableCell({
-																	margins: { bottom: 200, left: 100, right: 100 },
-																	borders: borderThin,
-																	children: [
-																		new Paragraph({ children: [new TextRun({ text: "CALIDAD DE LA MUESTRA;", bold: true, size: 20, font: "Arial Narrow" })] }),
-																		new Paragraph({ children: [new TextRun({ text: d.calidad_txt, size: 20, font: "Arial Narrow" })], spacing: { after: 200 } }),
-																		new Paragraph({ children: [new TextRun({ text: "CATEGORIZACIÓN GENERAL:", bold: true, size: 20, font: "Arial Narrow" })] }),
-																		new Paragraph({
-																			children: [new TextRun({ text: "• " + d.categorizacion, size: 20, font: "Arial Narrow" })],
-																			spacing: { after: 200 },
-																			indent: { left: 400 }
-																		}),
-																		new Paragraph({ children: [new TextRun({ text: "INTERPRETACIÓN:", bold: true, size: 20, font: "Arial Narrow" })] }),
-																		new Paragraph({ children: [new TextRun({ text: d.interpretacion, bold: true, color: "000000", size: 20, font: "Arial Narrow" })], spacing: { after: 200 } }),
-																		// new Paragraph({ children: [new TextRun({ text: "OBSERVACIONES:", bold: true, size: 20, font: "Arial Narrow" })] }),
-																		new Paragraph({ children: [new TextRun({ text: d.observaciones, size: 20, font: "Arial Narrow" })], spacing: { after: 400 } }),
-																		new Paragraph({ children: [new TextRun({ text: "Sistema Bethesda 2014.", italics: true, size: 18, font: "Arial Narrow" })], spacing: { before: 1600 } })
-																	]
-																})
-															]
-														})
-													]
-												})
-											],
-											borders: borderNone
-										})
-									]
-								})
-							]
-						}),
-
-						// FIRMA CON IMAGEN
-						new Paragraph({ spacing: { before: 100 } }),
-						firmaImg ? new Paragraph({
-							children: [
-								new ImageRun({
-									data: firmaImg,
-									transformation: { width: 106, height: 63 },
-								}),
-							],
-							alignment: AlignmentType.LEFT,
-						}) : new Paragraph({ text: "\n\n", alignment: AlignmentType.LEFT }),
-						new Paragraph({
-							children: [new TextRun({ text: "ATENTAMENTE", bold: true, size: 20, font: "Arial Narrow" })],
-							alignment: AlignmentType.LEFT,
-						}),
-						new Paragraph({
-							children: [new TextRun({ text: "DRA. ALVA MARTÍNEZ ANGOA", bold: true, size: 20, font: "Arial Narrow" })],
-							alignment: AlignmentType.LEFT,
-						}),
-						new Paragraph({
-							children: [new TextRun({ text: "Cédula 5928701", size: 20, font: "Arial Narrow" })],
-							alignment: AlignmentType.LEFT,
-						}),
-						new Paragraph({
-							children: [new TextRun({ text: "Residencia en Anatomía Patológica. Hospital General de México. Universidad Nacional Autónoma de México.", size: 20, font: "Arial Narrow" })],
-							alignment: AlignmentType.LEFT,
-						}),
-						new Paragraph({
-							children: [new TextRun({ text: "Re-Certificada por el Consejo Mexicano de Médicos Anatomopatólogos. Número 1014", size: 20, font: "Arial Narrow" })],
-							alignment: AlignmentType.LEFT,
-						}),
-					]
-				}]
-			});
-
-			const blob = await Packer.toBlob(doc);
-			window.saveAs(blob, `${d.estudio} ${d.paciente}.docx`);
+				// Verificar si saveAs está disponible
+				if (window.saveAs) {
+					window.saveAs(blob, `${d.estudio} ${d.paciente}.docx`);
+				} else {
+					// Alternativa si saveAs no está disponible
+					const link = document.createElement('a');
+					link.href = URL.createObjectURL(blob);
+					link.download = `${d.estudio} ${d.paciente}.docx`;
+					document.body.appendChild(link);
+					link.click();
+					document.body.removeChild(link);
+				}
+			} catch (error) {
+				console.error('Error al generar el documento DOCX:', error);
+				alert('Ocurrió un error al generar el documento. Por favor, intente nuevamente.');
+			}
 		}
+
 	</script>
 </body>
 
