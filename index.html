@@ -703,7 +703,8 @@
 							class="w-6 h-6 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform"></i>
 						<span>Generar Documentos</span>
 					</button>
-					<p class="mt-4 text-xs font-medium text-center" style="color: var(--text-muted)">Se generarán los archivos y se guardaran en la carpeta DESCARGAS de su dispositivo</p>
+					<p class="mt-4 text-xs font-medium text-center" style="color: var(--text-muted)">Se generarán los
+						archivos y se guardaran en la carpeta DESCARGAS de su dispositivo</p>
 				</div>
 			</div>
 		</main>
@@ -1633,25 +1634,30 @@
 				// Crear el contenido principal primero
 				const children = [
 					new Paragraph({
-						children: [new TextRun({ text: "ESTUDIO CITOLÓGICO CONVENCIONAL", bold: true, size: 22, font: "Arial Narrow" })],
+						children: [new TextRun({ text: "ESTUDIO CITOLÓGICO CONVENCIONAL", bold: true, size: 22, font: "Arial" })],
 						alignment: AlignmentType.LEFT,
-						spacing: { before: 450 }
+						spacing: { before: 700 }
 					}),
 					new Paragraph({
 						children: [new TextRun({ text: "TINCIÓN: Papanicolaou", size: 22, font: "Arial Narrow" })],
 						alignment: AlignmentType.LEFT,
+						spacing: { after: 35 }
 					}),
 					new Paragraph({
-						children: [new TextRun({ text: "PACIENTE: " + d.paciente, size: 22, font: "Arial Narrow" })]
+						children: [new TextRun({ text: "PACIENTE: " + d.paciente, size: 22, font: "Arial Narrow" })],
+						spacing: { after: 35 }
 					}),
 					new Paragraph({
-						children: [new TextRun({ text: "EDAD: " + d.edad, size: 22, font: "Arial Narrow" })]
+						children: [new TextRun({ text: "EDAD: " + d.edad, size: 22, font: "Arial Narrow" })],
+						spacing: { after: 35 }
 					}),
 					new Paragraph({
-						children: [new TextRun({ text: "MÉDICO SOLICITANTE: " + d.medico, size: 22, font: "Arial Narrow" })]
+						children: [new TextRun({ text: "MÉDICO SOLICITANTE: " + d.medico, size: 22, font: "Arial Narrow" })],
+						spacing: { after: 35 }
 					}),
 					new Paragraph({
-						children: [new TextRun({ text: "FECHA: " + d.fecha, size: 22, font: "Arial Narrow" })]
+						children: [new TextRun({ text: "FECHA: " + d.fecha, size: 22, font: "Arial Narrow" })],
+						spacing: { after: 35 }
 					}),
 					new Paragraph({
 						children: [new TextRun({ text: "NÚMERO DE ESTUDIO: " + d.estudio, size: 22, font: "Arial Narrow" })],
@@ -1683,9 +1689,9 @@
 										},
 										children: [
 											new Paragraph({
-												children: [new TextRun({ text: "INTERPRETACIÓN", bold: true, size: 26, font: "Arial Narrow" })],
+												children: [new TextRun({ text: "INTERPRETACIÓN", bold: true, size: 20, font: "Arial Narrow" })],
 												alignment: AlignmentType.LEFT,
-												spacing: { after: 100 }
+												spacing: { after: 50 }
 											}),
 											new Table({
 												width: { size: 100, type: WidthType.PERCENTAGE },
@@ -1715,8 +1721,10 @@
 															verticalAlign: VerticalAlign.TOP,
 															margins: { left: 100 },
 															children: [new Paragraph({
-																children: [new TextRun({ text: row[0], size: 20, font: "Arial Narrow", bold: true })]
+																children: [new TextRun({ text: row[0], size: 20, font: "Arial Narrow", bold: true })],
+																spacing: { after: 35 }
 															})],
+															width: { size: 60, type: WidthType.PERCENTAGE },
 															borders: borderThin
 														})
 													];
@@ -1746,7 +1754,7 @@
 														cells.push(new TableCell({
 															verticalAlign: VerticalAlign.CENTER,
 															columnSpan: 2,
-															margins: { left: 100 },
+															margins: { left: 100, right: 100 },
 															children: [new Paragraph({
 																children: [new TextRun({ text: value, size: 20, font: "Arial Narrow" })],
 																alignment: AlignmentType.LEFT
@@ -1755,7 +1763,7 @@
 														}));
 													}
 													return new TableRow({
-														height: { value: 300, rule: HeightRule.ATLEAST },
+														height: { value: 350, rule: HeightRule.ATLEAST },
 														children: cells
 													});
 												})
@@ -1783,9 +1791,9 @@
 										},
 										children: [
 											new Paragraph({
-												children: [new TextRun({ text: "RESULTADO DE LA CITOLOGÍA", bold: true, size: 26, font: "Arial Narrow" })],
+												children: [new TextRun({ text: "RESULTADO DE LA CITOLOGÍA", bold: true, size: 20, font: "Arial Narrow" })],
 												alignment: AlignmentType.LEFT,
-												spacing: { after: 100 }
+												spacing: { after: 50 }
 											}),
 											new Table({
 												width: { size: 100, type: WidthType.PERCENTAGE },
@@ -1800,27 +1808,38 @@
 																		children: [new TextRun({ text: "CALIDAD DE LA MUESTRA:", bold: true, size: 20, font: "Arial Narrow" })]
 																	}),
 																	new Paragraph({
-																		children: [new TextRun({ text: d.calidad_txt, size: 20, font: "Arial Narrow" })]
+																		children: [new TextRun({ text: d.calidad_txt, size: 20, font: "Arial Narrow" })],
+																		spacing: { after: 240 }
 																	}),
 																	new Paragraph({
 																		children: [new TextRun({ text: "CATEGORIZACIÓN GENERAL:", bold: true, size: 20, font: "Arial Narrow" })]
 																	}),
 																	new Paragraph({
 																		children: [new TextRun({ text: "• " + d.categorizacion, size: 20, font: "Arial Narrow" })],
+																		spacing: { after: 240 },
 																		indent: { left: 400 }
 																	}),
 																	new Paragraph({
 																		children: [new TextRun({ text: "INTERPRETACIÓN:", bold: true, size: 20, font: "Arial Narrow" })]
 																	}),
 																	new Paragraph({
-																		children: [new TextRun({ text: d.interpretacion, bold: true, color: "000000", size: 20, font: "Arial Narrow" })]
+																		children: (d.interpretacion || "").split('\n').map((line, index) =>
+																			new TextRun({
+																				text: line,
+																				bold: true,
+																				color: "000000",
+																				size: 20,
+																				font: "Arial Narrow",
+																				break: index > 0 ? 1 : 0
+																			})
+																		)
 																	}),
 																	new Paragraph({
 																		children: [new TextRun({ text: d.observaciones, size: 20, font: "Arial Narrow" })]
 																	}),
 																	new Paragraph({
-																		children: [new TextRun({ text: "Sistema Bethesda 2014.", italics: true, size: 18, font: "Arial Narrow" })],
-																		spacing: { before: 1600 }
+																		children: [new TextRun({ text: "Sistema Bethesda 2014.", italics: true, bold: true, size: 18, font: "Arial Narrow" })],
+																		spacing: { before: 720, after: 480 }
 																	})
 																]
 															})
@@ -1853,10 +1872,10 @@
 						children: [new TextRun({ text: "Cédula 5928701", size: 20, font: "Arial Narrow" })]
 					}),
 					new Paragraph({
-						children: [new TextRun({ text: "Residencia en Anatomía Patológica. Hospital General de México. UNAM.", size: 20, font: "Arial Narrow" })]
+						children: [new TextRun({ text: "Residencia en Anatomía Patológica. Hospital General de México. Universidad Nacional Autónoma de México.", size: 20, font: "Arial Narrow" })]
 					}),
 					new Paragraph({
-						children: [new TextRun({ text: "Re-Certificada por el CMMA. No. 1014", size: 20, font: "Arial Narrow" })]
+						children: [new TextRun({ text: "Re-Certificada por el Consejo Mexicano de Médicos Anatomopatólogos. No. 1014", size: 20, font: "Arial Narrow" })]
 					})
 				];
 
