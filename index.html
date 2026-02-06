@@ -1491,7 +1491,7 @@
 								image: watermarkBase64,
 								width: 612,
 								height: 792,
-								opacity: 0.28
+								opacity: 0.95
 							};
 						}
 						return null;
@@ -1626,7 +1626,7 @@
 
 		async function descargarDOCX(d, signatureBuffer, watermarkBuffer, useWatermark) {
 			try {
-				const { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle, Table, TableRow, TableCell, WidthType, VerticalAlign, ImageRun, HeightRule, Header } = window.docx;
+				const { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle, Table, TableRow, TableCell, WidthType, VerticalAlign, ImageRun, HeightRule, Header, TextWrappingType } = window.docx;
 
 				const borderNone = { style: BorderStyle.NONE };
 				const borderThin = { style: BorderStyle.SINGLE, size: 2 };
@@ -1895,29 +1895,28 @@
 							},
 							margin: { top: 450, right: 720, bottom: 720, left: 720 }
 						},
-						headers: (useWatermark && watermarkBuffer) ? {
-							default: new Header({
-								children: [
-									new Paragraph({
-										children: [
-											new ImageRun({
-												data: watermarkBuffer,
-												transformation: {
-													width: 12240 / 323.85 * 21.56,
-													height: 15840 / 419.1 * 27.9
-												},
-												floating: {
-													horizontalPosition: { relative: "page", align: "center" },
-													verticalPosition: { relative: "page", align: "center" },
-													behindDoc: true
-												}
-											})
-										]
-									})
-								]
-							})
-						} : {},
-						children: children
+						children: [
+							...(useWatermark && watermarkBuffer ? [
+								new Paragraph({
+									children: [
+										new ImageRun({
+											data: watermarkBuffer,
+											transformation: {
+												width: 12240 / 323.85 * 21.56,
+												height: 15840 / 419.1 * 27.9
+											},
+											floating: {
+												horizontalPosition: { relative: "page", align: "center" },
+												verticalPosition: { relative: "page", align: "center" },
+												behindDocument: true,
+												wrap: { type: TextWrappingType.NONE }
+											}
+										})
+									]
+								})
+							] : []),
+							...children
+						]
 					}]
 				});
 
