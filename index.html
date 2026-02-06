@@ -1484,7 +1484,7 @@
 
 				const docDefinition = {
 					pageSize: 'LETTER',
-					pageMargins: [65, 35, 65, 65], // Aumentar margen inferior para el footer
+					pageMargins: [70, 35, 70, 65], // Aumentar margen inferior para el footer
 					background: function (currentPage) {
 						if (currentPage === 1 && useWatermark && watermarkBase64) {
 							return {
@@ -1498,15 +1498,15 @@
 					},
 					content: [
 						// Encabezado
-						{ text: 'ESTUDIO CITOLÓGICO CONVENCIONAL', style: 'headerMain', margin: [0, 55, 0, 0] },
-						{ text: 'TINCIÓN: Papanicolaou', style: 'headerSub', margin: [0, 0, 0, 0] },
+						{ text: 'ESTUDIO CITOLÓGICO CONVENCIONAL', style: 'headerMain', margin: [0, 84, 0, 2] },
+						{ text: [{ text: 'TINCIÓN: ', bold: true }, 'Papanicolaou'], style: 'headerSub', margin: [0, 0, 0, 2] },
 
 						// Datos del Paciente (Compactos)
 						{ text: [{ text: 'PACIENTE: ', bold: true }, d.paciente], margin: [0, 0, 0, 2] },
 						{ text: [{ text: 'EDAD: ', bold: true }, d.edad], margin: [0, 0, 0, 2] },
 						{ text: [{ text: 'MÉDICO SOLICITANTE: ', bold: true }, d.medico], margin: [0, 0, 0, 2] },
 						{ text: [{ text: 'FECHA: ', bold: true }, d.fecha], margin: [0, 0, 0, 2] },
-						{ text: [{ text: 'NÚMERO DE ESTUDIO: ', bold: true }, d.estudio], margin: [0, 0, 0, 15] },
+						{ text: [{ text: 'NÚMERO DE ESTUDIO: ', bold: true }, d.estudio], margin: [0, 0, 0, 10] },
 
 						// Cuerpo
 						{
@@ -1517,7 +1517,7 @@
 										{ text: 'INTERPRETACIÓN', style: 'sectionTitle' },
 										{
 											table: {
-												widths: ['40%', '35%', '25%'],
+												widths: ['60%', '30%', '10%'],
 												body: [
 													[{ text: 'Calidad de la muestra:', bold: true }, { text: getRowValueWithDash(d.h_calidad), colSpan: 2 }, ''],
 													[{ text: 'Células endocervicales:', bold: true }, { text: getRowValueWithDash(d.h_endocervicales), colSpan: 2 }, ''],
@@ -1544,10 +1544,10 @@
 												vLineColor: () => '#333',
 												paddingLeft: () => 6,
 												paddingRight: () => 6,
-												paddingTop: () => 4,
-												paddingBottom: () => 4
+												paddingTop: () => 2,
+												paddingBottom: () => 4.8
 											},
-											fontSize: 8.5
+											fontSize: 9
 										}
 									]
 								},
@@ -1560,18 +1560,18 @@
 											table: {
 												widths: ['*'],
 												body: [[{
-													margin: [10, 10, 10, 10],
+													margin: [2, 2, 2, 2],
 													minHeight: 400,
 													stack: [
-														{ text: 'CALIDAD DE LA MUESTRA:', bold: true, fontSize: 9.5, margin: [0, 0, 0, 2] },
-														{ text: d.calidad_txt, margin: [0, 0, 0, 12], fontSize: 9.5 },
-														{ text: 'CATEGORIZACIÓN GENERAL:', bold: true, fontSize: 9.5, margin: [0, 0, 0, 2] },
-														{ text: '• ' + d.categorizacion, margin: [0, 0, 0, 12], fontSize: 9.5 },
-														{ text: 'INTERPRETACIÓN:', bold: true, fontSize: 9.5, margin: [0, 0, 0, 2] },
-														{ text: d.interpretacion, bold: true, color: 'black', margin: [0, 0, 0, 12], fontSize: 10 },
-														d.observaciones ? { text: 'OBSERVACIONES:', bold: true, fontSize: 9.5, margin: [0, 10, 0, 2] } : '',
-														d.observaciones ? { text: d.observaciones, fontSize: 9.5 } : '',
-														{ text: 'Sistema Bethesda 2014.', italics: true, fontSize: 8, alignment: 'center', margin: [0, 20, 0, 0] }
+														{ text: 'CALIDAD DE LA MUESTRA:', bold: true, fontSize: 9, margin: [0, 0, 0, 2] },
+														{ text: d.calidad_txt, margin: [0, 0, 0, 12], fontSize: 9 },
+														{ text: 'CATEGORIZACIÓN GENERAL:', bold: true, fontSize: 9, margin: [0, 0, 0, 2] },
+														{ text: '• ' + d.categorizacion, margin: [18, 0, 0, 12], fontSize: 9 },
+														{ text: 'INTERPRETACIÓN:', bold: true, fontSize: 9, margin: [0, 0, 0, 2] },
+														{ text: d.interpretacion, bold: true, color: 'black', margin: [0, 0, 0, 12], fontSize: 9 },
+														d.observaciones ? { text: 'OBSERVACIONES:', bold: true, fontSize: 9, margin: [0, 10, 0, 2] } : '',
+														d.observaciones ? { text: d.observaciones, fontSize: 9 } : '',
+														{ text: 'Sistema Bethesda 2014.', italics: true, bold: true, fontSize: 9, alignment: 'left', margin: [0, 30, 0, 30] }
 													]
 												}]]
 											},
@@ -1589,21 +1589,21 @@
 
 						// Firma
 						{
-							margin: [0, 25, 0, 0],
+							margin: [0, 14, 0, 0],
 							stack: [
-								signatureBase64 ? { image: signatureBase64, width: 110, margin: [0, 0, 0, 2] } : '',
+								signatureBase64 ? { image: signatureBase64, width: 90, margin: [0, 0, 0, 2] } : '',
 								{ text: 'ATENTAMENTE', bold: true, fontSize: 10 },
 								{ text: 'DRA. ALVA MARTÍNEZ ANGOA', bold: true, fontSize: 10, margin: [0, 1, 0, 0] },
 								{ text: 'Cédula 5928701', fontSize: 9 },
-								{ text: 'Residencia en Anatomía Patológica. Hospital General de México. UNAM.', fontSize: 7.5, color: '#444' },
-								{ text: 'Re-Certificada por el CMMA. No. 1014', fontSize: 7.5, color: '#444' }
+								{ text: 'Residencia en Anatomía Patológica. Hospital General de México. Universidad Nacional Autónoma de México.', fontSize: 7.5, color: '#444' },
+								{ text: 'Re-Certificada por el Consejo Mexicano de Médicos Anatomopatólogos. No. 1014', fontSize: 7.5, color: '#444' }
 							]
 						}
 					],
 					styles: {
-						headerMain: { fontSize: 12.5, bold: true, color: '#111' },
+						headerMain: { fontSize: 11, bold: true, color: '#111' },
 						headerSub: { fontSize: 10, color: '#444' },
-						sectionTitle: { fontSize: 10.5, bold: true, margin: [0, 0, 0, 6] }
+						sectionTitle: { fontSize: 10, bold: true, margin: [0, 0, 0, 2] }
 					},
 					defaultStyle: { font: 'Roboto', fontSize: 10, color: '#333' }
 				};
