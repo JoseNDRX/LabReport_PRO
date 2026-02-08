@@ -1666,6 +1666,7 @@
 
 					new Table({
 						width: { size: 100, type: WidthType.PERCENTAGE },
+						columnWidths: [55, 2, 43],
 						borders: {
 							top: borderNone,
 							bottom: borderNone,
@@ -1679,7 +1680,6 @@
 							new TableRow({
 								children: [
 									new TableCell({
-										width: { size: 55, type: WidthType.PERCENTAGE },
 										verticalAlign: VerticalAlign.TOP,
 										borders: {
 											top: borderNone,
@@ -1777,11 +1777,9 @@
 											bottom: borderNone,
 											left: borderNone,
 											right: borderNone,
-										},
-										width: { size: 2, type: WidthType.PERCENTAGE }
+										}
 									}),
 									new TableCell({
-										width: { size: 43, type: WidthType.PERCENTAGE },
 										verticalAlign: VerticalAlign.TOP,
 										borders: {
 											top: borderNone,
